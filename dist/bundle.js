@@ -84,7 +84,7 @@ function __extends(d, b) {
  * @Author: yorshka
  * @Date: 2021-01-29 22:34:19
  * @Last Modified by: yorshka
- * @Last Modified time: 2021-01-29 23:29:54
+ * @Last Modified time: 2021-01-29 23:53:43
  *
  * mesh实例，用来作为网格坐标层
  */
@@ -92,6 +92,7 @@ var Mesh = /** @class */ (function (_super) {
     __extends(Mesh, _super);
     function Mesh(options) {
         var _this = _super.call(this, options) || this;
+        // 初始化缓存
         _this.shapeBucket = new Map();
         return _this;
     }

@@ -2,10 +2,10 @@
  * @Author: yorshka
  * @Date: 2021-01-19 16:24:29
  * @Last Modified by: yorshka
- * @Last Modified time: 2021-01-29 23:42:18
+ * @Last Modified time: 2021-01-29 23:52:35
  *
  * EventBus 工具类
- * 需要从全局作用于立即执行函数重构为class，否则会导致无法追踪的匿名监听器残留
+ * 需要从全局作用域iife重构为class，否则会导致无法追踪的匿名监听器残留
  */
 
 interface Namespace {

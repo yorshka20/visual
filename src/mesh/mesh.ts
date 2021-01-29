@@ -2,7 +2,7 @@
  * @Author: yorshka
  * @Date: 2021-01-29 22:34:19
  * @Last Modified by: yorshka
- * @Last Modified time: 2021-01-29 23:29:54
+ * @Last Modified time: 2021-01-29 23:53:43
  *
  * mesh实例，用来作为网格坐标层
  */
@@ -17,6 +17,7 @@ export default class Mesh extends Canvas {
   constructor(options: MeshOptions) {
     super(options);
 
+    // 初始化缓存
     this.shapeBucket = new Map<string, any>();
   }
 
