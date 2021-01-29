@@ -17,6 +17,14 @@ module.exports = {
     sourceType: 'module',
   },
   plugins: ['react', '@typescript-eslint'],
+  settings: {
+    'import/resolver': {
+      alias: {
+        map: [['@src', './src']],
+        extensions: ['.ts', '.json'],
+      },
+    },
+  },
   rules: {
     quotes: ['error', 'single'],
     'no-console': 1,

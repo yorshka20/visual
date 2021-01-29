@@ -2,62 +2,52 @@
  * @Author: yorshka
  * @Date: 2021-01-29 10:25:35
  * @Last Modified by: yorshka
- * @Last Modified time: 2021-01-29 22:23:14
+ * @Last Modified time: 2021-01-29 23:21:42
  *
  * canvas demo.
  *
  */
 
+import { Canvas } from '@src/canvas';
+import { Mesh } from '@src/mesh';
 import { DemoOptions } from './interface';
 
 export default class Demo {
+  // 容器及实例
   private container: HTMLElement | null;
+  private canvas: Canvas;
 
-  private canvas: HTMLCanvasElement | null;
-
-  private ctx: CanvasRenderingContext2D | null;
+  // 坐标层
+  private meshCanvas: Mesh;
+  // 缓存层
+  private bufferCanvas: Canvas = null;
 
   constructor(options: DemoOptions) {
-    const container = document.getElementById(options.container || 'container');
+    const { container: name } = options;
+
+    const container = document.getElementById(
+      name || 'container'
+    ) as HTMLElement;
+    // 保存容器
     this.container = container;
 
-    const canvas = document.createElement('canvas');
-    const winEle = document.documentElement;
-    canvas.width = winEle.clientWidth - 100;
-    canvas.height = winEle.clientHeight - 100;
+    const canvas = new Canvas({
+      container,
+      zIndex: 1,
+    });
 
-    //   set absolute position for multiple-layer canvas layout.
-    canvas.style.position = 'absolute';
-    canvas.style.top = '50px';
-    canvas.style.left = '50px';
-    //   distinguish Element.
-    canvas.style.border = '1px solid black';
-
-    //   store canvas element
+    // 主画布
     this.canvas = canvas;
-    this.ctx = canvas.getContext('2d');
 
-    //   mount canvas element
-    this.container!.appendChild(canvas);
-
-    console.log('this.canvas', this.canvas);
-    console.log('this.container', this.container);
-    console.log('this.ctx', this.ctx);
+    // 网格画布，用作坐标感知
+    this.meshCanvas = new Mesh({
+      container,
+      zIndex: 2,
+      hide: true,
+    });
   }
 
   public render() {
-    if (!this.ctx) {
-      return;
-    }
-
-    this.ctx.strokeStyle = '#000';
-    this.ctx.lineWidth = 2;
-
-    this.ctx.beginPath();
-
-    this.ctx.ellipse(300, 300, 100, 100, 0, 0, 2 * Math.PI);
-    this.ctx.stroke();
-
-    this.ctx.closePath();
+    this.canvas.render();
   }
 }
