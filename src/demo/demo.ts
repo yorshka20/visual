@@ -2,23 +2,15 @@
  * @Author: yorshka
  * @Date: 2021-01-29 10:25:35
  * @Last Modified by: yorshka
- * @Last Modified time: 2021-01-29 20:20:22
+ * @Last Modified time: 2021-01-29 22:23:14
  *
  * canvas demo.
  *
  */
 
-import Cache from './cache';
+import { DemoOptions } from './interface';
 
-const cache = new Cache();
-
-console.log(cache);
-
-interface DemoOptions {
-  container: string;
-}
-
-class Demo {
+export default class Demo {
   private container: HTMLElement | null;
 
   private canvas: HTMLCanvasElement | null;
@@ -69,9 +61,3 @@ class Demo {
     this.ctx.closePath();
   }
 }
-
-const demo = new Demo({
-  container: 'container',
-});
-
-demo.render();

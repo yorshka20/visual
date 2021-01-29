@@ -24,7 +24,7 @@ function getPlugins() {
 }
 
 export default {
-  input: 'src/main.ts',
+  input: 'src/index.ts',
   plugins: getPlugins(),
   output: {
     file: 'dist/bundle.js',
