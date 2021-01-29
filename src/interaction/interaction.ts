@@ -2,13 +2,13 @@
  * @Author: yorshka
  * @Date: 2021-01-29 23:38:02
  * @Last Modified by: yorshka
- * @Last Modified time: 2021-01-30 00:18:03
+ * @Last Modified time: 2021-01-30 00:57:06
  *
  * 交互感知层
  */
 
 import { Canvas } from '@src/canvas';
-import { throttle } from 'lodash';
+import throttle from 'lodash/throttle';
 
 interface EventHandler {
   (e?: MouseEvent): void;
@@ -31,16 +31,16 @@ export default class Interaction {
   // 销毁
   public destroy(): void {
     this.target.removeEventListener('mousedown', this.mouseDownHandler);
-    this.target.removeEventListener('mouseenter', this.mouseEnterHandler);
-    this.target.removeEventListener('mouseleave', this.mouseLeaveHandler);
+    // this.target.removeEventListener('mouseenter', this.mouseEnterHandler);
+    // this.target.removeEventListener('mouseleave', this.mouseLeaveHandler);
     this.target.removeEventListener('mousemove', this.mouseMoveHandler);
   }
 
   // 挂载监听器
   public init(): void {
     this.target.addEventListener('mousedown', this.mouseDownHandler);
-    this.target.addEventListener('mouseenter', this.mouseEnterHandler);
-    this.target.addEventListener('mouseleave', this.mouseLeaveHandler);
+    // this.target.addEventListener('mouseenter', this.mouseEnterHandler);
+    // this.target.addEventListener('mouseleave', this.mouseLeaveHandler);
     this.target.addEventListener('mousemove', this.mouseMoveHandler);
   }
 

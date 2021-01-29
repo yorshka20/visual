@@ -2,7 +2,7 @@
  * @Author: yorshka
  * @Date: 2021-01-29 10:25:35
  * @Last Modified by: yorshka
- * @Last Modified time: 2021-01-30 00:20:49
+ * @Last Modified time: 2021-01-30 00:43:32
  *
  * canvas demo.
  *
@@ -16,17 +16,19 @@ import { DemoOptions } from './interface';
 export default class Demo {
   // 容器及实例
   private container: HTMLElement | null;
-  private canvas: Canvas;
 
   // 交互控制句柄，可取消监听器
   private interactionHandler: Interaction;
 
+  /* 按层级排列 */
   // 鼠标事件感知层
   private interactionLayer: Canvas;
-  // 坐标层
-  private meshLayer: Mesh;
   // 缓存层
   private bufferLayer: Canvas = null;
+  // 主画布
+  private displayLayer: Canvas;
+  // 坐标层
+  private meshLayer: Mesh;
 
   constructor(options: DemoOptions) {
     const { container: name } = options;
@@ -43,7 +45,7 @@ export default class Demo {
     });
 
     // 主画布
-    this.canvas = canvas;
+    this.displayLayer = canvas;
 
     // 网格画布，用作坐标感知
     this.meshLayer = new Mesh({
@@ -69,7 +71,20 @@ export default class Demo {
     this.interactionHandler.destroy();
   }
 
-  public render() {
-    this.canvas.render();
+  // 主渲染方法
+  // TODO: 局部刷新
+  public render(ctx?: CanvasRenderingContext2D): void {
+    if (!ctx) {
+      // console.log('canvas context is not ready!');
+      // return;
+      ctx = this.displayLayer.ctx;
+    }
+
+    ctx.beginPath();
+
+    ctx.ellipse(300, 300, 100, 100, 0, 0, 2 * Math.PI);
+    ctx.stroke();
+
+    ctx.closePath();
   }
 }

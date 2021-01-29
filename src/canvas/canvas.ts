@@ -2,7 +2,7 @@
  * @Author: yorshka
  * @Date: 2021-01-29 22:43:14
  * @Last Modified by: yorshka
- * @Last Modified time: 2021-01-30 00:18:52
+ * @Last Modified time: 2021-01-30 00:25:22
  *
  * 自定义canvas类型，大小与容器一致
  */
@@ -49,21 +49,5 @@ export default class Canvas {
 
     //   mount canvas element
     this.container!.appendChild(canvas);
-  }
-
-  // 主渲染方法
-  // TODO: 局部刷新
-  public render(): void {
-    if (!this.ctx) {
-      console.log('canvas context is not ready!');
-      return;
-    }
-
-    this.ctx.beginPath();
-
-    this.ctx.ellipse(300, 300, 100, 100, 0, 0, 2 * Math.PI);
-    this.ctx.stroke();
-
-    this.ctx.closePath();
   }
 }
