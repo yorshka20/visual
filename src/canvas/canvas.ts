@@ -2,7 +2,7 @@
  * @Author: yorshka
  * @Date: 2021-01-29 22:43:14
  * @Last Modified by: yorshka
- * @Last Modified time: 2021-01-30 00:25:22
+ * @Last Modified time: 2021-01-30 01:09:22
  *
  * 自定义canvas类型，大小与容器一致
  */
@@ -18,7 +18,7 @@ export default class Canvas {
   public ctx: CanvasRenderingContext2D | null;
 
   constructor(options: CanvasOptions) {
-    const { container, zIndex, hide } = options;
+    const { container, zIndex, hide, id } = options;
 
     //   保存canvas挂载容器
     this.container = container;
@@ -28,14 +28,14 @@ export default class Canvas {
     canvas.width = container.clientWidth;
     canvas.height = container.clientHeight;
 
+    // 设置id
+    canvas.setAttribute('id', id);
+
     //   set absolute position for multiple-layer canvas layout.
     canvas.style.position = 'absolute';
     canvas.style.top = '0';
     canvas.style.left = '0';
-    //   distinguish Element.
-    if (!hide) {
-      canvas.style.border = '1px solid black';
-    }
+
     // 设置z层级
     canvas.style.zIndex = zIndex + '';
 
@@ -48,6 +48,8 @@ export default class Canvas {
     this.ctx.lineWidth = 2;
 
     //   mount canvas element
-    this.container!.appendChild(canvas);
+    if (!hide) {
+      this.container!.appendChild(canvas);
+    }
   }
 }

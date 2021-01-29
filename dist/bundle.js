@@ -4,27 +4,25 @@
  * @Author: yorshka
  * @Date: 2021-01-29 22:43:14
  * @Last Modified by: yorshka
- * @Last Modified time: 2021-01-30 00:25:22
+ * @Last Modified time: 2021-01-30 01:09:22
  *
  * 自定义canvas类型，大小与容器一致
  */
 var Canvas = /** @class */ (function () {
     function Canvas(options) {
-        var container = options.container, zIndex = options.zIndex, hide = options.hide;
+        var container = options.container, zIndex = options.zIndex, hide = options.hide, id = options.id;
         //   保存canvas挂载容器
         this.container = container;
         //   创建canvas元素
         var canvas = document.createElement('canvas');
         canvas.width = container.clientWidth;
         canvas.height = container.clientHeight;
+        // 设置id
+        canvas.setAttribute('id', id);
         //   set absolute position for multiple-layer canvas layout.
         canvas.style.position = 'absolute';
         canvas.style.top = '0';
         canvas.style.left = '0';
-        //   distinguish Element.
-        if (!hide) {
-            canvas.style.border = '1px solid black';
-        }
         // 设置z层级
         canvas.style.zIndex = zIndex + '';
         //   store canvas element
@@ -34,10 +32,133 @@ var Canvas = /** @class */ (function () {
         this.ctx.strokeStyle = '#000';
         this.ctx.lineWidth = 2;
         //   mount canvas element
-        this.container.appendChild(canvas);
+        if (!hide) {
+            this.container.appendChild(canvas);
+        }
     }
     return Canvas;
 }());
+
+/*
+ * @Author: yorshka
+ * @Date: 2021-01-19 16:24:29
+ * @Last Modified by: yorshka
+ * @Last Modified time: 2021-01-29 23:52:35
+ *
+ * EventBus 工具类
+ * 需要从全局作用域iife重构为class，否则会导致无法追踪的匿名监听器残留
+ */
+var EventBus = /** @class */ (function () {
+    function EventBus() {
+        // 监听一个事件
+        this.on = function (name, key, fn) {
+            var _a;
+            var namespace = (_a = this.namespaceCache) === null || _a === void 0 ? void 0 : _a.get(name);
+            if (!namespace) {
+                return;
+            }
+            var cache = namespace.eventBucket;
+            if (!cache[key]) {
+                cache[key] = [];
+            }
+            cache[key].push(fn);
+        };
+        // 移除一个事件。如果fn为空，则清空该事件下的所有事件
+        this.remove = function (name, key, fn) {
+            var _a;
+            var namespace = (_a = this.namespaceCache) === null || _a === void 0 ? void 0 : _a.get(name);
+            if (!namespace) {
+                return;
+            }
+            var cache = namespace.eventBucket;
+            if (cache[key]) {
+                if (fn) {
+                    for (var i = cache[key].length; i >= 0; i--) {
+                        if (cache[key][i] === fn) {
+                            cache[key].splice(i, 1);
+                        }
+                    }
+                }
+                else {
+                    cache[key] = [];
+                }
+            }
+        };
+        if (EventBus._instance) {
+            return EventBus._instance;
+        }
+        this.defaultNamespace = 'default';
+        this.namespaceCache = new Map();
+        EventBus._instance = this;
+    }
+    Object.defineProperty(EventBus, "instance", {
+        get: function () {
+            if (!this._instance) {
+                this._instance = new EventBus();
+            }
+            return this._instance;
+        },
+        enumerable: false,
+        configurable: true
+    });
+    EventBus.prototype.clean = function () {
+        this.namespaceCache = null;
+        EventBus._instance = null;
+    };
+    EventBus.prototype.namespace = function (inputName) {
+        var _this = this;
+        var _a;
+        var name = inputName || this.defaultNamespace; // 命名空间
+        if ((_a = this.namespaceCache) === null || _a === void 0 ? void 0 : _a.get(name)) {
+            return this.namespaceCache.get(name);
+        }
+        var namespace = {
+            on: function (key, fn) {
+                _this.on(name, key, fn);
+            },
+            remove: function (key, fn) {
+                _this.remove(name, key, fn);
+            },
+            emit: function () {
+                var _a;
+                var args = [];
+                for (var _i = 0; _i < arguments.length; _i++) {
+                    args[_i] = arguments[_i];
+                }
+                var event = args[0], params = args[1];
+                var eventHandlers = (_a = this.eventBucket) === null || _a === void 0 ? void 0 : _a[event];
+                if (eventHandlers === null || eventHandlers === void 0 ? void 0 : eventHandlers.length) {
+                    eventHandlers.forEach(function (handler) {
+                        handler(params);
+                    });
+                }
+            },
+            eventBucket: {},
+        };
+        this.namespaceCache.set(name, namespace);
+        return namespace;
+    };
+    return EventBus;
+}());
+
+/**
+ * 消息类型
+ */
+var EventTypes;
+(function (EventTypes) {
+    EventTypes["CLICK"] = "click";
+    EventTypes["HOVER"] = "hover";
+    EventTypes["MOVE"] = "move";
+})(EventTypes || (EventTypes = {}));
+/**
+ * 消息命名空间
+ */
+var Namespace;
+(function (Namespace) {
+    Namespace["INTERACTION"] = "interaction";
+})(Namespace || (Namespace = {}));
+
+var bus = new EventBus();
 
 /**
  * Checks if `value` is the
@@ -586,7 +707,7 @@ var throttle_1 = throttle;
  * @Author: yorshka
  * @Date: 2021-01-29 23:38:02
  * @Last Modified by: yorshka
- * @Last Modified time: 2021-01-30 00:57:06
+ * @Last Modified time: 2021-01-30 01:12:12
  *
  * 交互感知层
  */
@@ -594,14 +715,29 @@ var Interaction = /** @class */ (function () {
     function Interaction(options) {
         this.mouseMoveHandler = function (e) {
             return throttle_1(function (e) {
-                console.log('mouse move:===>', e);
+                var offsetX = e.offsetX, offsetY = e.offsetY;
+                // 发送事件
+                bus.namespace(Namespace.INTERACTION).emit(EventTypes.MOVE, {
+                    x: offsetX,
+                    y: offsetY,
+                });
             }, 50)(e);
         };
         this.mouseDownHandler = function (e) {
-            console.log('mouse down: ===>', e);
+            var offsetX = e.offsetX, offsetY = e.offsetY;
+            // 发送事件
+            bus.namespace(Namespace.INTERACTION).emit(EventTypes.CLICK, {
+                x: offsetX,
+                y: offsetY,
+            });
         };
         this.mouseEnterHandler = function (e) {
-            console.log('mouse enter: ====>', e);
+            var offsetX = e.offsetX, offsetY = e.offsetY;
+            // 发送事件
+            bus.namespace(Namespace.INTERACTION).emit(EventTypes.HOVER, {
+                x: offsetX,
+                y: offsetY,
+            });
         };
         this.mouseLeaveHandler = function (e) {
             console.log('mouse leave: ===>', e);
@@ -688,7 +824,7 @@ var Mesh = /** @class */ (function (_super) {
  * @Author: yorshka
  * @Date: 2021-01-29 10:25:35
  * @Last Modified by: yorshka
- * @Last Modified time: 2021-01-30 00:43:32
+ * @Last Modified time: 2021-01-30 01:15:22
  *
  * canvas demo.
  *
@@ -696,36 +832,67 @@ var Mesh = /** @class */ (function (_super) {
 var Demo = /** @class */ (function () {
     function Demo(options) {
         // 缓存层
-        this.bufferLayer = null;
+        this.cacheLayer = null;
+        this.clickHandler = function (e) {
+            console.log('click', e);
+        };
+        this.moveHandler = function (e) {
+            console.log('move', e);
+        };
+        this.hoverHandler = function (e) {
+            console.log('hover', e);
+        };
         var name = options.container;
         var container = document.getElementById(name || 'container');
         // 保存容器
         this.container = container;
-        var canvas = new Canvas({
-            container: container,
-            zIndex: 1,
-        });
-        // 主画布
-        this.displayLayer = canvas;
-        // 网格画布，用作坐标感知
-        this.meshLayer = new Mesh({
-            container: container,
-            zIndex: 2,
-            hide: true,
-        });
         // 鼠标动作感知图层
         this.interactionLayer = new Canvas({
+            id: 'interaction',
+            container: container,
+            zIndex: 4,
+        });
+        // cache层，快速擦除，内容较少
+        this.cacheLayer = new Canvas({
+            id: 'cache',
             container: container,
             zIndex: 3,
+        });
+        // 主画布
+        this.displayLayer = new Canvas({
+            id: 'main',
+            container: container,
+            zIndex: 2,
+        });
+        // 网格画布，用作坐标感知
+        this.meshLayer = new Mesh({
+            id: 'mesh',
+            container: container,
+            zIndex: 1,
+            hide: true,
         });
         // 交互handler
         this.interactionHandler = new Interaction({
             target: this.interactionLayer,
         });
+        this.initListener();
     }
+    Demo.prototype.initListener = function () {
+        bus.namespace(Namespace.INTERACTION).on(EventTypes.CLICK, this.clickHandler);
+        bus.namespace(Namespace.INTERACTION).on(EventTypes.MOVE, this.moveHandler);
+        bus.namespace(Namespace.INTERACTION).on(EventTypes.HOVER, this.hoverHandler);
+    };
+    Demo.prototype.uninit = function () {
+        bus.namespace(Namespace.INTERACTION).remove(EventTypes.CLICK);
+        bus.namespace(Namespace.INTERACTION).remove(EventTypes.MOVE);
+        bus.namespace(Namespace.INTERACTION).remove(EventTypes.HOVER);
+    };
     // 销毁（其实不用调用）
     Demo.prototype.destroy = function () {
+        // 取消监听器
         this.interactionHandler.destroy();
+        // 解除eventBus
+        this.uninit();
     };
     // 主渲染方法
     // TODO: 局部刷新
@@ -747,12 +914,18 @@ var Demo = /** @class */ (function () {
  * @Author: yorshka
  * @Date: 2021-01-29 22:19:49
  * @Last Modified by: yorshka
- * @Last Modified time: 2021-01-29 22:33:02
+ * @Last Modified time: 2021-01-30 01:15:38
  *
  * demo: 数百个圆，随机排布，可被鼠标点击。点击后变色并置于顶层，其他圆的绘制顺序不变。
  */
+// 新建demo
 var demo = new Demo({
     container: 'container',
 });
 window.demo = demo;
+// 渲染图形
 demo.render();
+// 退出时销毁实例
+window.onunload = function () {
+    demo.destroy();
+};

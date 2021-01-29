@@ -4,6 +4,7 @@
 export enum EventTypes {
   CLICK = 'click',
   HOVER = 'hover',
+  MOVE = 'move',
 }
 
 /**

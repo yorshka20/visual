@@ -2,12 +2,13 @@
  * @Author: yorshka
  * @Date: 2021-01-29 23:38:02
  * @Last Modified by: yorshka
- * @Last Modified time: 2021-01-30 00:57:06
+ * @Last Modified time: 2021-01-30 01:12:12
  *
  * 交互感知层
  */
 
 import { Canvas } from '@src/canvas';
+import { EventBus, EventTypes, Namespace } from '@src/eventBus';
 import throttle from 'lodash/throttle';
 
 interface EventHandler {
@@ -46,15 +47,30 @@ export default class Interaction {
 
   private mouseMoveHandler = (e: MouseEvent) =>
     throttle((e: MouseEvent) => {
-      console.log('mouse move:===>', e);
+      const { offsetX, offsetY } = e;
+      // 发送事件
+      EventBus.namespace(Namespace.INTERACTION).emit(EventTypes.MOVE, {
+        x: offsetX,
+        y: offsetY,
+      });
     }, 50)(e);
 
   private mouseDownHandler = (e: MouseEvent) => {
-    console.log('mouse down: ===>', e);
+    const { offsetX, offsetY } = e;
+    // 发送事件
+    EventBus.namespace(Namespace.INTERACTION).emit(EventTypes.CLICK, {
+      x: offsetX,
+      y: offsetY,
+    });
   };
 
   private mouseEnterHandler = (e: MouseEvent) => {
-    console.log('mouse enter: ====>', e);
+    const { offsetX, offsetY } = e;
+    // 发送事件
+    EventBus.namespace(Namespace.INTERACTION).emit(EventTypes.HOVER, {
+      x: offsetX,
+      y: offsetY,
+    });
   };
 
   private mouseLeaveHandler = (e: MouseEvent) => {
