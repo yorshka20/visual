@@ -1,0 +1,27 @@
+{
+  "compilerOptions": {
+    /* Basic Options */
+    "target": "ES2015" /* Specify ECMAScript target version: 'ES3' (default), 'ES5', 'ES2015', 'ES2016', 'ES2017', or 'ESNEXT'. */,
+    "module": "commonjs" /* Specify module code generation: 'none', 'commonjs', 'amd', 'system', 'umd', 'es2015', or 'ESNext'. */,
+    "allowJs": true /* Allow javascript files to be compiled. */,
+    // "jsx": "preserve",                     /* Specify JSX code generation: 'preserve', 'react-native', or 'react'. */
+    // "declaration": true /* Generates corresponding '.d.ts' file. */,
+    "sourceMap": true /* Generates corresponding '.map' file. */,
+    /* Strict Type-Checking Options */
+    "strict": true /* Enable all strict type-checking options. */,
+    "noImplicitAny": false /* Raise error on expressions and declarations with an implied 'any' type. */,
+    "strictNullChecks": false /* Enable strict null checks. */,
+    // "strictFunctionTypes": true,           /* Enable strict checking of function types. */
+    "noImplicitThis": false /* Raise error on 'this' expressions with an implied 'any' type. */,
+    "alwaysStrict": true /* Parse in strict mode and emit "use strict" for each source file. */,
+
+    /* Module Resolution Options */
+    "baseUrl": "./" /* Base directory to resolve non-absolute module names. */,
+    "paths": {
+      "@src/*": ["src/*"]
+    } /* A series of entries which re-map imports to lookup locations relative to the 'baseUrl'. */
+  },
+
+  "include": ["src/*"],
+  "exclude": ["dist/*"]
+}
