@@ -2,7 +2,7 @@
  * @Author: yorshka
  * @Date: 2021-01-29 22:43:14
  * @Last Modified by: yorshka
- * @Last Modified time: 2021-01-29 23:20:43
+ * @Last Modified time: 2021-01-30 00:18:52
  *
  * 自定义canvas类型，大小与容器一致
  */
@@ -12,10 +12,10 @@ import { CanvasOptions } from './interface';
 export default class Canvas {
   // 挂载容器
   private container: HTMLElement | null;
-  // DOM canvas元素实例
-  protected canvasEle: HTMLCanvasElement | null;
+  // DOM canvas元素实例(对外暴露)
+  public canvasEle: HTMLCanvasElement | null;
   // 2d context
-  protected ctx: CanvasRenderingContext2D | null;
+  public ctx: CanvasRenderingContext2D | null;
 
   constructor(options: CanvasOptions) {
     const { container, zIndex, hide } = options;
@@ -43,7 +43,7 @@ export default class Canvas {
     this.canvasEle = canvas;
     this.ctx = canvas.getContext('2d');
 
-    // 初始化stroke样式
+    // 初始化stroke样式(default)
     this.ctx.strokeStyle = '#000';
     this.ctx.lineWidth = 2;
 

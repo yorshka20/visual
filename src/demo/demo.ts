@@ -2,13 +2,14 @@
  * @Author: yorshka
  * @Date: 2021-01-29 10:25:35
  * @Last Modified by: yorshka
- * @Last Modified time: 2021-01-29 23:21:42
+ * @Last Modified time: 2021-01-30 00:20:49
  *
  * canvas demo.
  *
  */
 
 import { Canvas } from '@src/canvas';
+import { Interaction } from '@src/interaction';
 import { Mesh } from '@src/mesh';
 import { DemoOptions } from './interface';
 
@@ -17,10 +18,15 @@ export default class Demo {
   private container: HTMLElement | null;
   private canvas: Canvas;
 
+  // 交互控制句柄，可取消监听器
+  private interactionHandler: Interaction;
+
+  // 鼠标事件感知层
+  private interactionLayer: Canvas;
   // 坐标层
-  private meshCanvas: Mesh;
+  private meshLayer: Mesh;
   // 缓存层
-  private bufferCanvas: Canvas = null;
+  private bufferLayer: Canvas = null;
 
   constructor(options: DemoOptions) {
     const { container: name } = options;
@@ -40,11 +46,27 @@ export default class Demo {
     this.canvas = canvas;
 
     // 网格画布，用作坐标感知
-    this.meshCanvas = new Mesh({
+    this.meshLayer = new Mesh({
       container,
       zIndex: 2,
       hide: true,
     });
+
+    // 鼠标动作感知图层
+    this.interactionLayer = new Canvas({
+      container,
+      zIndex: 3,
+    });
+
+    // 交互handler
+    this.interactionHandler = new Interaction({
+      target: this.interactionLayer,
+    });
+  }
+
+  // 销毁（其实不用调用）
+  public destroy() {
+    this.interactionHandler.destroy();
   }
 
   public render() {
