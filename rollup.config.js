@@ -12,11 +12,11 @@ function getPlugins() {
       browser: true,
     }),
     typescript({
-      tsconfig: './tsconfig.rollup.json',
+      tsconfig: './tsconfig.json',
       clean: true,
     }),
     cjs({
-      include: ['node_modules/**', 'lib/**'],
+      include: ['node_modules/**'],
     }),
   ];
 
