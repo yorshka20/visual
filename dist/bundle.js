@@ -4,13 +4,13 @@
  * @Author: yorshka
  * @Date: 2021-01-29 22:43:14
  * @Last Modified by: yorshka
- * @Last Modified time: 2021-01-30 14:10:05
+ * @Last Modified time: 2021-01-30 15:27:26
  *
  * 自定义canvas类型，大小与容器一致
  */
 var Canvas = /** @class */ (function () {
     function Canvas(options) {
-        var container = options.container, zIndex = options.zIndex, hide = options.hide, id = options.id;
+        var container = options.container, zIndex = options.zIndex; options.hide; var id = options.id;
         //   保存canvas挂载容器
         this.container = container;
         //   创建canvas元素
@@ -34,9 +34,9 @@ var Canvas = /** @class */ (function () {
         this.ctx.lineWidth = 1;
         this.ctx.strokeStyle = '#000';
         //   mount canvas element
-        if (!hide) {
-            this.container.appendChild(canvas);
-        }
+        // if (!hide) {
+        this.container.appendChild(canvas);
+        // }
     }
     return Canvas;
 }());
@@ -195,16 +195,23 @@ function __extends(d, b) {
  * @Author: yorshka
  * @Date: 2021-01-29 22:34:19
  * @Last Modified by: yorshka
- * @Last Modified time: 2021-01-30 13:27:21
+ * @Last Modified time: 2021-01-30 15:42:30
  *
  * mesh实例，用来作为网格坐标层
  */
 var Mesh = /** @class */ (function (_super) {
     __extends(Mesh, _super);
     function Mesh(options) {
-        var _this = _super.call(this, options) || this;
+        var _this = this;
+        if (Mesh.instance) {
+            return Mesh.instance;
+        }
+        _this = _super.call(this, options) || this;
         // 初始化缓存
         _this.shapeBucket = new Map();
+        // 记录格点大小
+        _this.gridGapX = _this.gridGapY = options.gridGap;
+        Mesh.instance = _this;
         return _this;
     }
     // 录入图形，形成坐标
@@ -217,11 +224,34 @@ var Mesh = /** @class */ (function (_super) {
         var id = shape.id;
         this.shapeBucket.delete(id);
     };
-    // 获取point在mesh中最近的grid位置
-    Mesh.prototype.getMeshGrid = function (x, y) {
-        var gx = Math.floor(x / this.gridGapX);
-        var gy = Math.floor(y / this.gridGapY);
-        return [gx, gy];
+    // 渲染网格坐标
+    Mesh.prototype.renderGrid = function () {
+        var ctx = this.ctx;
+        ctx.lineWidth = 0.5;
+        ctx.strokeStyle = '#d2e2f7';
+        var gridSize = this.gridGapX;
+        var xStart = 0;
+        var xEnd = this.container.clientWidth;
+        var yStart = 0;
+        var yEnd = this.container.clientHeight;
+        // console.log('xStart, xEnd', xStart, xEnd);
+        // console.log('yStart, yEnd', yStart, yEnd);
+        // console.log('gridSize', gridSize);
+        ctx.beginPath();
+        // 画网格, x axios
+        for (var x = xStart; x <= xEnd + gridSize; x += gridSize) {
+            // 超出坐标系绘制，防止有空隙
+            ctx.moveTo(x, yStart - gridSize);
+            ctx.lineTo(x, yEnd + gridSize);
+        }
+        // 画网格, y axios
+        for (var y = yStart; y <= yEnd + gridSize; y += gridSize) {
+            // 超出坐标系绘制，防止有空隙
+            ctx.moveTo(xStart - gridSize, y);
+            ctx.lineTo(xEnd + gridSize, y);
+        }
+        ctx.closePath();
+        ctx.stroke();
     };
     return Mesh;
 }(Canvas));
@@ -230,7 +260,7 @@ var Mesh = /** @class */ (function (_super) {
  * @Author: yorshka
  * @Date: 2021-01-29 23:04:21
  * @Last Modified by: yorshka
- * @Last Modified time: 2021-01-30 14:10:41
+ * @Last Modified time: 2021-01-30 15:45:30
  *
  * shape类型，用来储存需要被绘制的数据
  */
@@ -244,7 +274,35 @@ var Shape = /** @class */ (function () {
         this.zIndex = zIndex;
         //   生成随机id
         this.id = Math.random().toString(36).substring(2);
+        // shape晚于mesh实例化，所以此时mesh必定已经实例化完成
+        this.gridSize = Mesh.instance.gridGapX;
+        // 初始化缓存
+        this.initCache();
     }
+    // 初始化缓存
+    // 1. 找出所有覆盖到的grid
+    // 2. 记录每个grid的id
+    Shape.prototype.initCache = function () {
+        var _this = this;
+        setTimeout(function () {
+            _this.gridSize;
+            _this.gridSize;
+            [_this.x - _this.radius, _this.x + _this.radius];
+            [_this.y - _this.radius, _this.y + _this.radius];
+            // const xList = width[0] /
+            // console.log('finish cache: ', this.zIndex, this.id);
+        }, 0);
+        //  shape.points.forEach((point: Point, index: number) => {
+        //    const [x, y] = this.getMeshGrid(point.x, point.y);
+        //    const id = [x, y].join(':');
+        //   });
+        //   // 生成meshGrid信息
+        //   this.meshGrids.push({
+        //     anchor: new Point(x * this.gridGapX, y * this.gridGapY),
+        //     id,
+        //   });
+        //   this.simpleGridList = [...new Set([...this.simpleGridList, id])];
+    };
     // 自身渲染
     Shape.prototype.render = function (ctx, fillColor) {
         if (fillColor === void 0) { fillColor = '#00BFFF'; }
@@ -270,13 +328,15 @@ var Shape = /** @class */ (function () {
  * @Author: yorshka
  * @Date: 2021-01-29 10:25:35
  * @Last Modified by: yorshka
- * @Last Modified time: 2021-01-30 13:59:55
+ * @Last Modified time: 2021-01-30 15:43:36
  *
  * canvas demo.
  *
  */
 var Demo = /** @class */ (function () {
     function Demo(options) {
+        // 粗粒化格子大小
+        this.gridGap = 20;
         // 缓存层
         this.cacheLayer = null;
         this.clickHandler = function (e) {
@@ -318,7 +378,9 @@ var Demo = /** @class */ (function () {
             container: container,
             zIndex: 1,
             hide: true,
+            gridGap: this.gridGap,
         });
+        this.meshLayer.renderGrid();
         // 交互handler
         // this.interactionHandler = new Interaction({
         //   target: this.interactionLayer,
@@ -362,12 +424,15 @@ var Demo = /** @class */ (function () {
     Demo.prototype.generateShape = function (count) {
         var list = [];
         while (count) {
-            list.push(new Shape({
+            var shape = new Shape({
                 x: Math.floor(Math.random() * this.width),
                 y: Math.floor(Math.random() * this.height),
                 radius: Math.floor(Math.random() * 40 + 10),
                 zIndex: count,
-            }));
+            });
+            list.push(shape);
+            // 网格层记录图形数据
+            this.meshLayer.recordShape(shape);
             count--;
         }
         return list;

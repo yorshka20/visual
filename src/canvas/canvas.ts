@@ -2,7 +2,7 @@
  * @Author: yorshka
  * @Date: 2021-01-29 22:43:14
  * @Last Modified by: yorshka
- * @Last Modified time: 2021-01-30 14:10:05
+ * @Last Modified time: 2021-01-30 15:27:26
  *
  * 自定义canvas类型，大小与容器一致
  */
@@ -11,7 +11,7 @@ import { CanvasOptions } from './interface';
 
 export default class Canvas {
   // 挂载容器
-  private container: HTMLElement | null;
+  protected container: HTMLElement | null;
   // DOM canvas元素实例(对外暴露)
   public canvasEle: HTMLCanvasElement | null;
   // 2d context
@@ -51,8 +51,8 @@ export default class Canvas {
     this.ctx.strokeStyle = '#000';
 
     //   mount canvas element
-    if (!hide) {
-      this.container!.appendChild(canvas);
-    }
+    // if (!hide) {
+    this.container!.appendChild(canvas);
+    // }
   }
 }

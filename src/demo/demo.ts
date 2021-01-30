@@ -2,7 +2,7 @@
  * @Author: yorshka
  * @Date: 2021-01-29 10:25:35
  * @Last Modified by: yorshka
- * @Last Modified time: 2021-01-30 13:59:55
+ * @Last Modified time: 2021-01-30 15:43:36
  *
  * canvas demo.
  *
@@ -21,6 +21,9 @@ export default class Demo {
 
   private width: number;
   private height: number;
+
+  // 粗粒化格子大小
+  private gridGap = 20;
 
   // 交互控制句柄，可取消监听器
   private interactionHandler: Interaction;
@@ -74,7 +77,10 @@ export default class Demo {
       container,
       zIndex: 1,
       hide: true,
+      gridGap: this.gridGap,
     });
+
+    this.meshLayer.renderGrid();
 
     // 交互handler
     // this.interactionHandler = new Interaction({
@@ -149,14 +155,17 @@ export default class Demo {
     const list = [];
 
     while (count) {
-      list.push(
-        new Shape({
-          x: Math.floor(Math.random() * this.width),
-          y: Math.floor(Math.random() * this.height),
-          radius: Math.floor(Math.random() * 40 + 10), // 10 ~ 50
-          zIndex: count,
-        })
-      );
+      const shape = new Shape({
+        x: Math.floor(Math.random() * this.width),
+        y: Math.floor(Math.random() * this.height),
+        radius: Math.floor(Math.random() * 40 + 10), // 10 ~ 50
+        zIndex: count,
+      });
+      list.push(shape);
+
+      // 网格层记录图形数据
+      this.meshLayer.recordShape(shape);
+
       count--;
     }
 

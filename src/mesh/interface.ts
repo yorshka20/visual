@@ -8,7 +8,7 @@
 import { CanvasOptions } from '@src/canvas/interface';
 
 export interface MeshOptions extends CanvasOptions {
-  [key: string]: any;
+  gridGap: number;
 }
 
 export interface BoundingBoxData {
