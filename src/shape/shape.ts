@@ -2,11 +2,12 @@
  * @Author: yorshka
  * @Date: 2021-01-29 23:04:21
  * @Last Modified by: yorshka
- * @Last Modified time: 2021-01-30 16:59:28
+ * @Last Modified time: 2021-01-30 18:40:43
  *
  * shape类型，用来储存需要被绘制的数据
  */
 
+import { EventBus, EventTypes, Namespace } from '@src/eventBus';
 import { Mesh } from '@src/mesh';
 import { getCoveredGrid } from './utils';
 
@@ -49,7 +50,7 @@ export default class Shape {
     this.id = Math.random().toString(36).substring(2);
 
     // shape晚于mesh实例化，所以此时mesh必定已经实例化完成
-    this.gridSize = Mesh.instance.gridGapX;
+    this.gridSize = Mesh.instance.gridSize;
 
     // 初始化缓存
     this.initCache();
@@ -58,7 +59,7 @@ export default class Shape {
   // 初始化缓存
   // 1. 找出所有覆盖到的grid
   // 2. 记录每个grid的id
-  private initCache(): void {
+  private initCache() {
     setTimeout(() => {
       const gridList = getCoveredGrid(
         this.x,
@@ -69,6 +70,7 @@ export default class Shape {
 
       this.meshGridList = gridList;
       console.log('finish cache: ', this.zIndex, this.id);
+      EventBus.namespace(Namespace.INIT).emit(EventTypes.SHAPE, this);
     }, 0);
   }
 

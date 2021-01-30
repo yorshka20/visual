@@ -2,7 +2,7 @@
  * @Author: yorshka
  * @Date: 2021-01-30 15:08:51
  * @Last Modified by: yorshka
- * @Last Modified time: 2021-01-30 17:13:44
+ * @Last Modified time: 2021-01-30 17:14:30
  */
 
 // 获得shape cover的格子
@@ -38,9 +38,9 @@ export function getCoveredGrid(
 }
 
 // 获取point在mesh中最近的grid位置
-export function getMeshGrid(x: number, y: number, gridGap: number): number[] {
-  const gx = Math.floor(x / gridGap);
-  const gy = Math.floor(y / gridGap);
+export function getMeshGrid(x: number, y: number, gridSize: number): number[] {
+  const gx = Math.floor(x / gridSize);
+  const gy = Math.floor(y / gridSize);
 
   return [gx, gy];
 }

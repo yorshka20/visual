@@ -2,13 +2,13 @@
  * @Author: yorshka
  * @Date: 2021-01-29 22:35:02
  * @Last Modified by: yorshka
- * @Last Modified time: 2021-01-30 13:16:03
+ * @Last Modified time: 2021-01-30 18:40:01
  */
 
 import { CanvasOptions } from '@src/canvas/interface';
 
 export interface MeshOptions extends CanvasOptions {
-  gridGap: number;
+  gridSize: number;
 }
 
 export interface BoundingBoxData {

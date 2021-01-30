@@ -4,19 +4,21 @@
  * @Author: yorshka
  * @Date: 2021-01-29 22:43:14
  * @Last Modified by: yorshka
- * @Last Modified time: 2021-01-30 15:27:26
+ * @Last Modified time: 2021-01-30 17:26:28
  *
  * 自定义canvas类型，大小与容器一致
  */
 var Canvas = /** @class */ (function () {
     function Canvas(options) {
-        var container = options.container, zIndex = options.zIndex; options.hide; var id = options.id;
+        var container = options.container, zIndex = options.zIndex, hide = options.hide, id = options.id;
         //   保存canvas挂载容器
         this.container = container;
         //   创建canvas元素
         var canvas = document.createElement('canvas');
         canvas.width = container.clientWidth;
         canvas.height = container.clientHeight;
+        this.width = container.clientWidth;
+        this.height = container.clientHeight;
         // 设置id
         canvas.setAttribute('id', id);
         //   set absolute position for multiple-layer canvas layout.
@@ -34,9 +36,9 @@ var Canvas = /** @class */ (function () {
         this.ctx.lineWidth = 1;
         this.ctx.strokeStyle = '#000';
         //   mount canvas element
-        // if (!hide) {
-        this.container.appendChild(canvas);
-        // }
+        if (!hide) {
+            this.container.appendChild(canvas);
+        }
     }
     return Canvas;
 }());
@@ -151,6 +153,7 @@ var EventTypes;
     EventTypes["CLICK"] = "click";
     EventTypes["HOVER"] = "hover";
     EventTypes["MOVE"] = "move";
+    EventTypes["SHAPE"] = "shape";
 })(EventTypes || (EventTypes = {}));
 /**
  * 消息命名空间
@@ -158,6 +161,7 @@ var EventTypes;
 var Namespace;
 (function (Namespace) {
     Namespace["INTERACTION"] = "interaction";
+    Namespace["INIT"] = "init";
 })(Namespace || (Namespace = {}));
 
 var bus = new EventBus();
@@ -193,43 +197,177 @@ function __extends(d, b) {
 
 /*
  * @Author: yorshka
+ * @Date: 2021-01-29 22:35:02
+ * @Last Modified by: yorshka
+ * @Last Modified time: 2021-01-30 18:40:01
+ */
+// 包围盒
+var BoundingBox = /** @class */ (function () {
+    function BoundingBox(data) {
+        var x = data.x, y = data.y, width = data.width, height = data.height;
+        this.x = x;
+        this.y = y;
+        this.width = width;
+        this.height = height;
+    }
+    return BoundingBox;
+}());
+
+/*
+ * @Author: yorshka
+ * @Date: 2021-01-30 13:13:02
+ * @Last Modified by: yorshka
+ * @Last Modified time: 2021-01-30 13:26:50
+ */
+// 返回一个矩形
+function computeBoundingBox(shape) {
+    return new BoundingBox({
+        x: shape.x,
+        y: shape.y,
+        width: 2 * shape.radius,
+        height: 2 * shape.radius,
+    });
+}
+
+/*
+ * @Author: yorshka
+ * @Date: 2021-01-30 17:18:10
+ * @Last Modified by: yorshka
+ * @Last Modified time: 2021-01-30 17:29:58
+ *
+ * 高亮层，绘制鼠标感知状态
+ */
+var Highlight = /** @class */ (function (_super) {
+    __extends(Highlight, _super);
+    function Highlight(options) {
+        var _this = _super.call(this, options) || this;
+        _this.hoverHandler = function (shape) {
+            _this.hoverTarget = shape;
+        };
+        //   设置高亮stroke颜色
+        _this.ctx.strokeStyle = '#00FF00';
+        //   初始化监听器
+        _this.init();
+        return _this;
+    }
+    Object.defineProperty(Highlight.prototype, "hoverTarget", {
+        get: function () {
+            return this._target;
+        },
+        set: function (val) {
+            if (val.id !== this._target.id) {
+                this._target = val;
+                this.clean();
+                this.drawHighlight(val);
+            }
+        },
+        enumerable: false,
+        configurable: true
+    });
+    Highlight.prototype.destroy = function () {
+        this.uninit();
+    };
+    Highlight.prototype.init = function () {
+        bus.namespace(Namespace.INTERACTION).on(EventTypes.HOVER, this.hoverHandler);
+    };
+    Highlight.prototype.uninit = function () {
+        bus.namespace(Namespace.INTERACTION).remove(EventTypes.HOVER);
+    };
+    // 绘制高亮框
+    Highlight.prototype.drawHighlight = function (shape) {
+        var rect = computeBoundingBox(shape);
+        this.ctx.strokeRect(rect.x, rect.y, rect.width, rect.height);
+    };
+    Highlight.prototype.clean = function () {
+        this.ctx.clearRect(0, 0, this.width, this.height);
+    };
+    return Highlight;
+}(Canvas));
+
+/*
+ * @Author: yorshka
  * @Date: 2021-01-29 22:34:19
  * @Last Modified by: yorshka
- * @Last Modified time: 2021-01-30 15:42:30
+ * @Last Modified time: 2021-01-30 18:44:57
  *
  * mesh实例，用来作为网格坐标层
  */
 var Mesh = /** @class */ (function (_super) {
     __extends(Mesh, _super);
     function Mesh(options) {
-        var _this = this;
+        var _this = _super.call(this, options) || this;
+        _this.handleShapeReady = function (shape) {
+            console.log('shape', shape);
+            _this.recordShape(shape);
+        };
         if (Mesh.instance) {
             return Mesh.instance;
         }
-        _this = _super.call(this, options) || this;
         // 初始化缓存
         _this.shapeBucket = new Map();
+        _this.gridCache = new Map();
         // 记录格点大小
-        _this.gridGapX = _this.gridGapY = options.gridGap;
+        _this.gridSize = options.gridSize;
+        bus.namespace(Namespace.INIT).on(EventTypes.SHAPE, _this.handleShapeReady);
         Mesh.instance = _this;
         return _this;
     }
     // 录入图形，形成坐标
     Mesh.prototype.recordShape = function (shape) {
         var id = shape.id;
+        // 记录原始数据
         this.shapeBucket.set(id, shape);
+        // 更新格点缓存
+        this.updateGridCache(shape);
     };
     // 删除图形
     Mesh.prototype.removeShape = function (shape) {
-        var id = shape.id;
+        var _this = this;
+        var id = shape.id, meshGridList = shape.meshGridList, zIndex = shape.zIndex;
         this.shapeBucket.delete(id);
+        meshGridList.forEach(function (grid) {
+            var cache = _this.gridCache.get(grid);
+            if (cache) {
+                cache.list = cache.list.filter(function (i) { return i != id; });
+                if (cache.topIndex == zIndex && cache.list.length) {
+                    var topShape = _this.shapeBucket.get(cache.list[0]);
+                    cache.topIndex = topShape.zIndex;
+                }
+                _this.gridCache.set(grid, cache);
+            }
+        });
+    };
+    // 格点缓存
+    Mesh.prototype.updateGridCache = function (shape) {
+        var _this = this;
+        var id = shape.id, meshGridList = shape.meshGridList, zIndex = shape.zIndex;
+        meshGridList.forEach(function (grid) {
+            var cache = _this.gridCache.get(grid);
+            if (!cache) {
+                cache = {
+                    list: [],
+                    topIndex: 0,
+                };
+            }
+            var topIndex = cache.topIndex, list = cache.list;
+            // 更新最大zindex
+            if (zIndex > topIndex) {
+                topIndex = zIndex;
+                list.unshift(id);
+            }
+            else {
+                list.push(id);
+            }
+            // 更新缓存
+            _this.gridCache.set(grid, { topIndex: topIndex, list: list });
+        });
     };
     // 渲染网格坐标
     Mesh.prototype.renderGrid = function () {
         var ctx = this.ctx;
         ctx.lineWidth = 0.5;
         ctx.strokeStyle = '#d2e2f7';
-        var gridSize = this.gridGapX;
+        var gridSize = this.gridSize;
         var xStart = 0;
         var xEnd = this.container.clientWidth;
         var yStart = 0;
@@ -260,7 +398,7 @@ var Mesh = /** @class */ (function (_super) {
  * @Author: yorshka
  * @Date: 2021-01-30 15:08:51
  * @Last Modified by: yorshka
- * @Last Modified time: 2021-01-30 17:09:48
+ * @Last Modified time: 2021-01-30 17:14:30
  */
 // 获得shape cover的格子
 function getCoveredGrid(x, y, radius, gridSize) {
@@ -271,13 +409,17 @@ function getCoveredGrid(x, y, radius, gridSize) {
     var lb = [x - radius, y + radius];
     var xAxis = [Math.floor(lt[0] / gridSize), Math.floor(rt[0] / gridSize)];
     var yAxis = [Math.floor(lt[1] / gridSize), Math.floor(lb[0] / gridSize)];
-    console.log('xAxis,yAxis', xAxis, yAxis);
+    // console.log('xAxis,yAxis', xAxis, yAxis);
     for (var x_1 = xAxis[0]; x_1 <= xAxis[1]; x_1++) {
+        if (x_1 < 0)
+            continue;
         for (var y_1 = yAxis[0]; y_1 <= yAxis[1]; y_1++) {
+            if (y_1 < 0)
+                continue;
             list.push(x_1 + ":" + y_1);
         }
     }
-    console.log('list', list);
+    // console.log('list', list);
     return list;
 }
 
@@ -285,7 +427,7 @@ function getCoveredGrid(x, y, radius, gridSize) {
  * @Author: yorshka
  * @Date: 2021-01-29 23:04:21
  * @Last Modified by: yorshka
- * @Last Modified time: 2021-01-30 16:59:28
+ * @Last Modified time: 2021-01-30 18:40:43
  *
  * shape类型，用来储存需要被绘制的数据
  */
@@ -300,7 +442,7 @@ var Shape = /** @class */ (function () {
         //   生成随机id
         this.id = Math.random().toString(36).substring(2);
         // shape晚于mesh实例化，所以此时mesh必定已经实例化完成
-        this.gridSize = Mesh.instance.gridGapX;
+        this.gridSize = Mesh.instance.gridSize;
         // 初始化缓存
         this.initCache();
     }
@@ -313,6 +455,7 @@ var Shape = /** @class */ (function () {
             var gridList = getCoveredGrid(_this.x, _this.y, _this.radius, _this.gridSize);
             _this.meshGridList = gridList;
             console.log('finish cache: ', _this.zIndex, _this.id);
+            bus.namespace(Namespace.INIT).emit(EventTypes.SHAPE, _this);
         }, 0);
     };
     // 自身渲染
@@ -340,7 +483,7 @@ var Shape = /** @class */ (function () {
  * @Author: yorshka
  * @Date: 2021-01-29 10:25:35
  * @Last Modified by: yorshka
- * @Last Modified time: 2021-01-30 15:43:36
+ * @Last Modified time: 2021-01-30 18:40:41
  *
  * canvas demo.
  *
@@ -348,7 +491,7 @@ var Shape = /** @class */ (function () {
 var Demo = /** @class */ (function () {
     function Demo(options) {
         // 粗粒化格子大小
-        this.gridGap = 20;
+        this.gridSize = 25;
         // 缓存层
         this.cacheLayer = null;
         this.clickHandler = function (e) {
@@ -373,7 +516,7 @@ var Demo = /** @class */ (function () {
             zIndex: 4,
         });
         // cache层，快速擦除，内容较少
-        this.cacheLayer = new Canvas({
+        this.cacheLayer = new Highlight({
             id: 'cache',
             container: container,
             zIndex: 3,
@@ -389,8 +532,8 @@ var Demo = /** @class */ (function () {
             id: 'mesh',
             container: container,
             zIndex: 1,
-            hide: true,
-            gridGap: this.gridGap,
+            // hide: true,
+            gridSize: this.gridSize,
         });
         this.meshLayer.renderGrid();
         // 交互handler
@@ -443,8 +586,6 @@ var Demo = /** @class */ (function () {
                 zIndex: count,
             });
             list.push(shape);
-            // 网格层记录图形数据
-            this.meshLayer.recordShape(shape);
             count--;
         }
         return list;

@@ -2,13 +2,15 @@
  * @Author: yorshka
  * @Date: 2021-01-29 23:38:02
  * @Last Modified by: yorshka
- * @Last Modified time: 2021-01-30 01:12:12
+ * @Last Modified time: 2021-01-30 18:40:39
  *
  * 交互感知层
  */
 
 import { Canvas } from '@src/canvas';
 import { EventBus, EventTypes, Namespace } from '@src/eventBus';
+import { Mesh } from '@src/mesh';
+import { getMeshGrid } from '@src/shape/utils';
 import throttle from 'lodash/throttle';
 
 interface EventHandler {
@@ -23,8 +25,13 @@ export default class Interaction {
   // 监听目标元素
   private target: HTMLCanvasElement;
 
+  private mesh: Mesh;
+
   constructor(options: InteractionOptions) {
     this.target = options.target.canvasEle;
+
+    // 获取mesh实例
+    this.mesh = Mesh.instance;
 
     this.init();
   }
@@ -57,6 +64,9 @@ export default class Interaction {
 
   private mouseDownHandler = (e: MouseEvent) => {
     const { offsetX, offsetY } = e;
+    // 获取当前位置的grid
+    const grid = getMeshGrid(offsetX, offsetY, this.mesh.gridSize);
+
     // 发送事件
     EventBus.namespace(Namespace.INTERACTION).emit(EventTypes.CLICK, {
       x: offsetX,
@@ -66,6 +76,9 @@ export default class Interaction {
 
   private mouseEnterHandler = (e: MouseEvent) => {
     const { offsetX, offsetY } = e;
+
+    // 获取当前位置的grid
+    const grid = getMeshGrid(offsetX, offsetY, this.mesh.gridSize);
     // 发送事件
     EventBus.namespace(Namespace.INTERACTION).emit(EventTypes.HOVER, {
       x: offsetX,

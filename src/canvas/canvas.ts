@@ -2,7 +2,7 @@
  * @Author: yorshka
  * @Date: 2021-01-29 22:43:14
  * @Last Modified by: yorshka
- * @Last Modified time: 2021-01-30 15:27:26
+ * @Last Modified time: 2021-01-30 17:26:28
  *
  * 自定义canvas类型，大小与容器一致
  */
@@ -17,6 +17,10 @@ export default class Canvas {
   // 2d context
   public ctx: CanvasRenderingContext2D | null;
 
+  // 宽高
+  protected width: number;
+  protected height: number;
+
   constructor(options: CanvasOptions) {
     const { container, zIndex, hide, id } = options;
 
@@ -27,6 +31,9 @@ export default class Canvas {
     const canvas = document.createElement('canvas');
     canvas.width = container.clientWidth;
     canvas.height = container.clientHeight;
+
+    this.width = container.clientWidth;
+    this.height = container.clientHeight;
 
     // 设置id
     canvas.setAttribute('id', id);
@@ -51,8 +58,8 @@ export default class Canvas {
     this.ctx.strokeStyle = '#000';
 
     //   mount canvas element
-    // if (!hide) {
-    this.container!.appendChild(canvas);
-    // }
+    if (!hide) {
+      this.container!.appendChild(canvas);
+    }
   }
 }

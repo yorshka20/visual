@@ -2,13 +2,20 @@
  * @Author: yorshka
  * @Date: 2021-01-29 22:34:19
  * @Last Modified by: yorshka
- * @Last Modified time: 2021-01-30 15:42:30
+ * @Last Modified time: 2021-01-30 18:44:57
  *
  * mesh实例，用来作为网格坐标层
  */
 
 import { Canvas } from '@src/canvas';
+import { EventBus, EventTypes, Namespace } from '@src/eventBus';
+import { Shape } from '@src/shape';
 import { MeshOptions } from './interface';
+
+interface GridCacheList {
+  topIndex: number;
+  list: string[];
+}
 
 export default class Mesh extends Canvas {
   static instance: Mesh;
@@ -16,37 +23,92 @@ export default class Mesh extends Canvas {
   // 缓冲数据集
   private shapeBucket: Map<string, any>;
 
+  // 格点缓存，以gridId为key，记录cover该grid的shape的list，shape按zindex倒序排
+  gridCache: Map<string, GridCacheList>;
+
   // mesh网格格子大小
-  gridGapX: number;
-  gridGapY: number;
+  gridSize: number;
 
   constructor(options: MeshOptions) {
+    super(options);
+
     if (Mesh.instance) {
       return Mesh.instance;
     }
 
-    super(options);
-
     // 初始化缓存
     this.shapeBucket = new Map<string, any>();
+    this.gridCache = new Map<string, GridCacheList>();
 
     // 记录格点大小
-    this.gridGapX = this.gridGapY = options.gridGap;
+    this.gridSize = options.gridSize;
+
+    EventBus.namespace(Namespace.INIT).on(
+      EventTypes.SHAPE,
+      this.handleShapeReady
+    );
 
     Mesh.instance = this;
   }
 
+  private handleShapeReady = (shape: Shape) => {
+    console.log('shape', shape);
+    this.recordShape(shape);
+  };
+
   // 录入图形，形成坐标
-  public recordShape(shape: any): void {
+  public recordShape(shape: Shape): void {
     const { id } = shape;
 
+    // 记录原始数据
     this.shapeBucket.set(id, shape);
+
+    // 更新格点缓存
+    this.updateGridCache(shape);
   }
 
   // 删除图形
-  public removeShape(shape: any): void {
-    const { id } = shape;
+  public removeShape(shape: Shape): void {
+    const { id, meshGridList, zIndex } = shape;
     this.shapeBucket.delete(id);
+
+    meshGridList.forEach((grid) => {
+      const cache = this.gridCache.get(grid);
+      if (cache) {
+        cache.list = cache.list.filter((i) => i != id);
+        if (cache.topIndex == zIndex && cache.list.length) {
+          const topShape = this.shapeBucket.get(cache.list[0]);
+          cache.topIndex = topShape.zIndex;
+        }
+
+        this.gridCache.set(grid, cache);
+      }
+    });
+  }
+
+  // 格点缓存
+  private updateGridCache(shape: Shape): void {
+    const { id, meshGridList, zIndex } = shape;
+    meshGridList.forEach((grid) => {
+      let cache = this.gridCache.get(grid);
+      if (!cache) {
+        cache = {
+          list: [],
+          topIndex: 0,
+        };
+      }
+      let { topIndex, list } = cache;
+      // 更新最大zindex
+      if (zIndex > topIndex) {
+        topIndex = zIndex;
+        list.unshift(id);
+      } else {
+        list.push(id);
+      }
+
+      // 更新缓存
+      this.gridCache.set(grid, { topIndex, list });
+    });
   }
 
   // 渲染网格坐标
@@ -56,7 +118,7 @@ export default class Mesh extends Canvas {
     ctx.lineWidth = 0.5;
     ctx.strokeStyle = '#d2e2f7';
 
-    const gridSize = this.gridGapX;
+    const gridSize = this.gridSize;
 
     const xStart = 0;
     const xEnd = this.container.clientWidth;

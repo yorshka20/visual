@@ -5,6 +5,8 @@ export enum EventTypes {
   CLICK = 'click',
   HOVER = 'hover',
   MOVE = 'move',
+
+  SHAPE = 'shape',
 }
 
 /**
@@ -12,4 +14,5 @@ export enum EventTypes {
  */
 export enum Namespace {
   INTERACTION = 'interaction',
+  INIT = 'init',
 }
