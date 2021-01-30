@@ -2,23 +2,15 @@
  * @Author: yorshka
  * @Date: 2021-01-29 23:04:21
  * @Last Modified by: yorshka
- * @Last Modified time: 2021-01-30 18:40:43
+ * @Last Modified time: 2021-01-30 22:00:25
  *
  * shape类型，用来储存需要被绘制的数据
  */
 
 import { EventBus, EventTypes, Namespace } from '@src/eventBus';
 import { Mesh } from '@src/mesh';
-import { getCoveredGrid } from './utils';
-
-interface ShapeOptions {
-  x: number;
-  y: number;
-  radius: number;
-
-  zIndex: number; // 层级
-}
-
+import { getCoverArea, getCoveredGrid } from './utils';
+import { ShapeOptions, CoverArea } from './interface';
 export default class Shape {
   // 唯一id
   id: string;
@@ -27,6 +19,12 @@ export default class Shape {
   x: number;
   y: number;
   radius: number;
+
+  // 填充颜色
+  fillColor: string;
+
+  // cover到的grid的区域
+  coverArea: CoverArea;
 
   // 格点大小
   gridSize: number;
@@ -45,6 +43,14 @@ export default class Shape {
     this.y = y;
     this.radius = radius;
     this.zIndex = zIndex;
+    this.coverArea = {
+      x: 0,
+      y: 0,
+      width: 0,
+      height: 0,
+    };
+
+    this.fillColor = '#00BFFF';
 
     //   生成随机id
     this.id = Math.random().toString(36).substring(2);
@@ -67,6 +73,9 @@ export default class Shape {
         this.radius,
         this.gridSize
       );
+
+      // 记录cover区域，用于局部擦除
+      this.coverArea = getCoverArea(this.x, this.y, this.radius, this.gridSize);
 
       this.meshGridList = gridList;
       console.log('finish cache: ', this.zIndex, this.id);

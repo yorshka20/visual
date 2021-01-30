@@ -1,5 +1,57 @@
 'use strict';
 
+/*! *****************************************************************************
+Copyright (c) Microsoft Corporation.
+
+Permission to use, copy, modify, and/or distribute this software for any
+purpose with or without fee is hereby granted.
+
+THE SOFTWARE IS PROVIDED "AS IS" AND THE AUTHOR DISCLAIMS ALL WARRANTIES WITH
+REGARD TO THIS SOFTWARE INCLUDING ALL IMPLIED WARRANTIES OF MERCHANTABILITY
+AND FITNESS. IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR ANY SPECIAL, DIRECT,
+INDIRECT, OR CONSEQUENTIAL DAMAGES OR ANY DAMAGES WHATSOEVER RESULTING FROM
+LOSS OF USE, DATA OR PROFITS, WHETHER IN AN ACTION OF CONTRACT, NEGLIGENCE OR
+OTHER TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR
+PERFORMANCE OF THIS SOFTWARE.
+***************************************************************************** */
+/* global Reflect, Promise */
+
+var extendStatics = function(d, b) {
+    extendStatics = Object.setPrototypeOf ||
+        ({ __proto__: [] } instanceof Array && function (d, b) { d.__proto__ = b; }) ||
+        function (d, b) { for (var p in b) if (Object.prototype.hasOwnProperty.call(b, p)) d[p] = b[p]; };
+    return extendStatics(d, b);
+};
+
+function __extends(d, b) {
+    extendStatics(d, b);
+    function __() { this.constructor = d; }
+    d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
+}
+
+function __read(o, n) {
+    var m = typeof Symbol === "function" && o[Symbol.iterator];
+    if (!m) return o;
+    var i = m.call(o), r, ar = [], e;
+    try {
+        while ((n === void 0 || n-- > 0) && !(r = i.next()).done) ar.push(r.value);
+    }
+    catch (error) { e = { error: error }; }
+    finally {
+        try {
+            if (r && !r.done && (m = i["return"])) m.call(i);
+        }
+        finally { if (e) throw e.error; }
+    }
+    return ar;
+}
+
+function __spread() {
+    for (var ar = [], i = 0; i < arguments.length; i++)
+        ar = ar.concat(__read(arguments[i]));
+    return ar;
+}
+
 /*
  * @Author: yorshka
  * @Date: 2021-01-29 22:43:14
@@ -42,6 +94,10 @@ var Canvas = /** @class */ (function () {
     }
     return Canvas;
 }());
+
+// mesh格子大小
+// 点击变色色列
+var COLOR_SET = ['#FF0000', '#EE0000', '#CD0000', '#8B0000'];
 
 /*
  * @Author: yorshka
@@ -129,7 +185,7 @@ var EventBus = /** @class */ (function () {
                 for (var _i = 0; _i < arguments.length; _i++) {
                     args[_i] = arguments[_i];
                 }
-                var event = args[0], params = args[1];
+                var _b = __read(args, 2), event = _b[0], params = _b[1];
                 var eventHandlers = (_a = this.eventBucket) === null || _a === void 0 ? void 0 : _a[event];
                 if (eventHandlers === null || eventHandlers === void 0 ? void 0 : eventHandlers.length) {
                     eventHandlers.forEach(function (handler) {
@@ -150,9 +206,10 @@ var EventBus = /** @class */ (function () {
  */
 var EventTypes;
 (function (EventTypes) {
-    EventTypes["CLICK"] = "click";
-    EventTypes["HOVER"] = "hover";
     EventTypes["MOVE"] = "move";
+    EventTypes["MOUSEDOWN"] = "mousedown";
+    EventTypes["HOVER"] = "hover";
+    EventTypes["CLICK"] = "click";
     EventTypes["SHAPE"] = "shape";
 })(EventTypes || (EventTypes = {}));
 /**
@@ -165,35 +222,6 @@ var Namespace;
 })(Namespace || (Namespace = {}));
 
 var bus = new EventBus();
-
-/*! *****************************************************************************
-Copyright (c) Microsoft Corporation.
-
-Permission to use, copy, modify, and/or distribute this software for any
-purpose with or without fee is hereby granted.
-
-THE SOFTWARE IS PROVIDED "AS IS" AND THE AUTHOR DISCLAIMS ALL WARRANTIES WITH
-REGARD TO THIS SOFTWARE INCLUDING ALL IMPLIED WARRANTIES OF MERCHANTABILITY
-AND FITNESS. IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR ANY SPECIAL, DIRECT,
-INDIRECT, OR CONSEQUENTIAL DAMAGES OR ANY DAMAGES WHATSOEVER RESULTING FROM
-LOSS OF USE, DATA OR PROFITS, WHETHER IN AN ACTION OF CONTRACT, NEGLIGENCE OR
-OTHER TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR
-PERFORMANCE OF THIS SOFTWARE.
-***************************************************************************** */
-/* global Reflect, Promise */
-
-var extendStatics = function(d, b) {
-    extendStatics = Object.setPrototypeOf ||
-        ({ __proto__: [] } instanceof Array && function (d, b) { d.__proto__ = b; }) ||
-        function (d, b) { for (var p in b) if (Object.prototype.hasOwnProperty.call(b, p)) d[p] = b[p]; };
-    return extendStatics(d, b);
-};
-
-function __extends(d, b) {
-    extendStatics(d, b);
-    function __() { this.constructor = d; }
-    d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
-}
 
 /*
  * @Author: yorshka
@@ -233,7 +261,7 @@ function computeBoundingBox(shape) {
  * @Author: yorshka
  * @Date: 2021-01-30 17:18:10
  * @Last Modified by: yorshka
- * @Last Modified time: 2021-01-30 19:37:51
+ * @Last Modified time: 2021-01-30 20:31:48
  *
  * 高亮层，绘制鼠标感知状态
  */
@@ -257,7 +285,10 @@ var Highlight = /** @class */ (function (_super) {
         },
         set: function (val) {
             var _a;
-            console.log('shape', val);
+            if (!val) {
+                this.clean();
+                return;
+            }
             if (val.id !== ((_a = this._target) === null || _a === void 0 ? void 0 : _a.id) || !this._target) {
                 this._target = val;
                 this.clean();
@@ -279,192 +310,12 @@ var Highlight = /** @class */ (function (_super) {
     // 绘制高亮框
     Highlight.prototype.drawHighlight = function (shape) {
         var rect = computeBoundingBox(shape);
-        console.log('rect', rect);
         this.ctx.strokeRect(rect.x, rect.y, rect.width, rect.height);
     };
     Highlight.prototype.clean = function () {
         this.ctx.clearRect(0, 0, this.width, this.height);
     };
     return Highlight;
-}(Canvas));
-
-/*
- * @Author: yorshka
- * @Date: 2021-01-30 15:08:51
- * @Last Modified by: yorshka
- * @Last Modified time: 2021-01-30 19:58:38
- */
-// 获得shape cover的格子
-function getCoveredGrid(x, y, radius, gridSize) {
-    var list = [];
-    // boundingBox四顶点
-    var lt = [x - radius < 0 ? 0 : x - radius, y - radius < 0 ? 0 : y - radius];
-    var rt = [x + radius, y - radius < 0 ? 0 : y - radius];
-    var lb = [x - radius < 0 ? 0 : x - radius, y + radius];
-    console.log('x,y,radius', x, y, radius);
-    console.log('lt,rt,lb', lt, rt, lb);
-    var xAxis = [Math.floor(lt[0] / gridSize), Math.floor(rt[0] / gridSize)];
-    var yAxis = [Math.floor(lt[1] / gridSize), Math.floor(lb[1] / gridSize)];
-    console.log('xAxis,yAxis', xAxis, yAxis);
-    for (var x_1 = xAxis[0]; x_1 <= xAxis[1]; x_1++) {
-        for (var y_1 = yAxis[0]; y_1 <= yAxis[1]; y_1++) {
-            list.push(x_1 + ":" + y_1);
-        }
-    }
-    // console.log('list', list);
-    return list;
-}
-// 获取point在mesh中最近的grid位置
-function getMeshGrid(x, y, gridSize) {
-    var gx = Math.floor(x / gridSize);
-    var gy = Math.floor(y / gridSize);
-    return [gx, gy];
-}
-
-/*
- * @Author: yorshka
- * @Date: 2021-01-29 22:34:19
- * @Last Modified by: yorshka
- * @Last Modified time: 2021-01-30 20:10:26
- *
- * mesh实例，用来作为网格坐标层
- */
-var Mesh = /** @class */ (function (_super) {
-    __extends(Mesh, _super);
-    function Mesh(options) {
-        var _this = _super.call(this, options) || this;
-        // 监听鼠标移动，计算当前hover shape
-        _this.handleMouseMove = function (point) {
-            var _a;
-            var grid = getMeshGrid(point.x, point.y, _this.gridSize).join(':');
-            console.log('grid', grid);
-            var cache = _this.gridCache.get(grid);
-            if (cache) {
-                console.log('has content', cache);
-                if ((_a = cache === null || cache === void 0 ? void 0 : cache.list) === null || _a === void 0 ? void 0 : _a.length) {
-                    var shape = _this.shapeBucket.get(cache.list[0]);
-                    bus.namespace(Namespace.INTERACTION).emit(EventTypes.HOVER, shape);
-                }
-            }
-        };
-        _this.handleShapeReady = function (shape) {
-            console.log('shape ready', shape);
-            _this.recordShape(shape);
-        };
-        if (Mesh.instance) {
-            return Mesh.instance;
-        }
-        // 初始化缓存
-        _this.shapeBucket = new Map();
-        _this.gridCache = new Map();
-        // 记录格点大小
-        _this.gridSize = options.gridSize;
-        bus.namespace(Namespace.INIT).on(EventTypes.SHAPE, _this.handleShapeReady);
-        bus.namespace(Namespace.INTERACTION).on(EventTypes.MOVE, _this.handleMouseMove);
-        Mesh.instance = _this;
-        return _this;
-    }
-    // 录入图形，形成坐标
-    Mesh.prototype.recordShape = function (shape) {
-        var id = shape.id;
-        // 记录原始数据
-        this.shapeBucket.set(id, shape);
-        // 更新格点缓存
-        this.updateGridCache(shape);
-    };
-    // 删除图形
-    Mesh.prototype.removeShape = function (shape) {
-        var _this = this;
-        var id = shape.id, meshGridList = shape.meshGridList, zIndex = shape.zIndex;
-        this.shapeBucket.delete(id);
-        meshGridList.forEach(function (grid) {
-            var cache = _this.gridCache.get(grid);
-            if (cache) {
-                cache.list = cache.list.filter(function (i) { return i != id; });
-                if (cache.topIndex == zIndex && cache.list.length) {
-                    var topShape = _this.shapeBucket.get(cache.list[0]);
-                    cache.topIndex = topShape.zIndex;
-                }
-                _this.gridCache.set(grid, cache);
-            }
-        });
-    };
-    // 格点缓存
-    Mesh.prototype.updateGridCache = function (shape) {
-        var _this = this;
-        var id = shape.id, meshGridList = shape.meshGridList, zIndex = shape.zIndex;
-        meshGridList.forEach(function (grid) {
-            var cache = _this.gridCache.get(grid);
-            if (!cache) {
-                cache = {
-                    list: [],
-                    topIndex: 0,
-                };
-            }
-            var topIndex = cache.topIndex, list = cache.list;
-            // 更新最大zindex
-            if (zIndex > topIndex) {
-                topIndex = zIndex;
-                list.unshift(id);
-            }
-            else {
-                list.push(id);
-            }
-            // 更新缓存
-            _this.gridCache.set(grid, { topIndex: topIndex, list: list });
-            {
-                // debug
-                _this.fillGrid(grid);
-            }
-        });
-    };
-    Mesh.prototype.fillGrid = function (grid) {
-        var _a = grid.split(':').map(function (i) { return Number(i); }), x = _a[0], y = _a[1];
-        this.ctx.fillStyle = '#666';
-        this.ctx.fillRect(x * this.gridSize, y * this.gridSize, this.gridSize, this.gridSize);
-    };
-    // 渲染网格坐标
-    Mesh.prototype.renderGrid = function () {
-        var ctx = this.ctx;
-        ctx.lineWidth = 0.5;
-        ctx.strokeStyle = '#d2e2f7';
-        var gridSize = this.gridSize;
-        var xStart = 0;
-        var xEnd = this.container.clientWidth;
-        var yStart = 0;
-        var yEnd = this.container.clientHeight;
-        // console.log('xStart, xEnd', xStart, xEnd);
-        // console.log('yStart, yEnd', yStart, yEnd);
-        // console.log('gridSize', gridSize);
-        ctx.beginPath();
-        // 画网格, x axios
-        for (var x = xStart; x <= xEnd + gridSize; x += gridSize) {
-            // 超出坐标系绘制，防止有空隙
-            ctx.moveTo(x, yStart - gridSize);
-            ctx.lineTo(x, yEnd + gridSize);
-        }
-        // 画网格, y axios
-        for (var y = yStart; y <= yEnd + gridSize; y += gridSize) {
-            // 超出坐标系绘制，防止有空隙
-            ctx.moveTo(xStart - gridSize, y);
-            ctx.lineTo(xEnd + gridSize, y);
-        }
-        var xOffset = 0;
-        var yOffset = 0;
-        // 画格线交点
-        for (var x = xStart - gridSize; x <= xEnd; x += gridSize) {
-            for (var y = yStart - gridSize; y <= yEnd; y += gridSize) {
-                if (Math.abs(x + xOffset) % 100 == 0 &&
-                    Math.abs(y + yOffset) % 100 == 0) {
-                    ctx.strokeStyle = '#000';
-                    ctx.strokeText("(" + (x + xOffset) / gridSize + "," + (y + yOffset) / gridSize + ")", x + 1, y - 1);
-                }
-            }
-        }
-        ctx.closePath();
-        ctx.stroke();
-    };
-    return Mesh;
 }(Canvas));
 
 /**
@@ -537,9 +388,9 @@ var now = function() {
 var now_1 = now;
 
 /** Built-in value references. */
-var Symbol = _root.Symbol;
+var Symbol$1 = _root.Symbol;
 
-var _Symbol = Symbol;
+var _Symbol = Symbol$1;
 
 /** Used for built-in method references. */
 var objectProto = Object.prototype;
@@ -1014,13 +865,12 @@ var throttle_1 = throttle;
  * @Author: yorshka
  * @Date: 2021-01-29 23:38:02
  * @Last Modified by: yorshka
- * @Last Modified time: 2021-01-30 19:41:13
+ * @Last Modified time: 2021-01-30 20:52:58
  *
  * 交互感知层
  */
 var Interaction = /** @class */ (function () {
     function Interaction(options) {
-        var _this = this;
         this.mouseMoveHandler = function (e) {
             return throttle_1(function (e) {
                 var offsetX = e.offsetX, offsetY = e.offsetY;
@@ -1033,44 +883,23 @@ var Interaction = /** @class */ (function () {
         };
         this.mouseDownHandler = function (e) {
             var offsetX = e.offsetX, offsetY = e.offsetY;
-            // 获取当前位置的grid
-            getMeshGrid(offsetX, offsetY, _this.mesh.gridSize);
             // 发送事件
-            bus.namespace(Namespace.INTERACTION).emit(EventTypes.CLICK, {
+            bus.namespace(Namespace.INTERACTION).emit(EventTypes.MOUSEDOWN, {
                 x: offsetX,
                 y: offsetY,
             });
-        };
-        this.mouseEnterHandler = function (e) {
-            var offsetX = e.offsetX, offsetY = e.offsetY;
-            // 获取当前位置的grid
-            getMeshGrid(offsetX, offsetY, _this.mesh.gridSize);
-            // 发送事件
-            bus.namespace(Namespace.INTERACTION).emit(EventTypes.HOVER, {
-                x: offsetX,
-                y: offsetY,
-            });
-        };
-        this.mouseLeaveHandler = function (e) {
-            console.log('mouse leave: ===>', e);
         };
         this.target = options.target.canvasEle;
-        // 获取mesh实例
-        this.mesh = Mesh.instance;
         this.init();
     }
     // 销毁
     Interaction.prototype.destroy = function () {
         this.target.removeEventListener('mousedown', this.mouseDownHandler);
-        // this.target.removeEventListener('mouseenter', this.mouseEnterHandler);
-        // this.target.removeEventListener('mouseleave', this.mouseLeaveHandler);
         this.target.removeEventListener('mousemove', this.mouseMoveHandler);
     };
     // 挂载监听器
     Interaction.prototype.init = function () {
         this.target.addEventListener('mousedown', this.mouseDownHandler);
-        // this.target.addEventListener('mouseenter', this.mouseEnterHandler);
-        // this.target.addEventListener('mouseleave', this.mouseLeaveHandler);
         this.target.addEventListener('mousemove', this.mouseMoveHandler);
     };
     return Interaction;
@@ -1078,9 +907,234 @@ var Interaction = /** @class */ (function () {
 
 /*
  * @Author: yorshka
+ * @Date: 2021-01-30 15:08:51
+ * @Last Modified by: yorshka
+ * @Last Modified time: 2021-01-30 22:00:05
+ */
+// 获得shape cover的格子
+function getCoveredGrid(x, y, radius, gridSize) {
+    var list = [];
+    // boundingBox三顶点： 左上，右上，左下
+    var lt = [x - radius < 0 ? 0 : x - radius, y - radius < 0 ? 0 : y - radius];
+    var rt = [x + radius, y - radius < 0 ? 0 : y - radius];
+    var lb = [x - radius < 0 ? 0 : x - radius, y + radius];
+    // console.log('x,y,radius', x, y, radius);
+    // console.log('lt,rt,lb', lt, rt, lb);
+    var xAxis = [Math.floor(lt[0] / gridSize), Math.floor(rt[0] / gridSize)];
+    var yAxis = [Math.floor(lt[1] / gridSize), Math.floor(lb[1] / gridSize)];
+    // console.log('xAxis,yAxis', xAxis, yAxis);
+    for (var x_1 = xAxis[0]; x_1 <= xAxis[1]; x_1++) {
+        for (var y_1 = yAxis[0]; y_1 <= yAxis[1]; y_1++) {
+            list.push(x_1 + ":" + y_1);
+        }
+    }
+    // console.log('list', list);
+    return list;
+}
+// 获取point在mesh中最近的grid位置
+function getMeshGrid(x, y, gridSize) {
+    var gx = Math.floor(x / gridSize);
+    var gy = Math.floor(y / gridSize);
+    return [gx, gy];
+}
+// 计算cover区域
+function getCoverArea(x, y, radius, gridSize) {
+    var area = {
+        x: 0,
+        y: 0,
+        width: 0,
+        height: 0,
+    };
+    // boundingBox三顶点： 左上，右上，左下
+    var lt = [x - radius < 0 ? 0 : x - radius, y - radius < 0 ? 0 : y - radius];
+    var rt = [x + radius, y - radius < 0 ? 0 : y - radius];
+    var lb = [x - radius < 0 ? 0 : x - radius, y + radius];
+    var xAxis = [Math.floor(lt[0] / gridSize), Math.floor(rt[0] / gridSize)];
+    var yAxis = [Math.floor(lt[1] / gridSize), Math.floor(lb[1] / gridSize)];
+    area.x = xAxis[0] * gridSize;
+    area.y = yAxis[0] * gridSize;
+    area.width = xAxis[1] * gridSize + gridSize - area.x;
+    area.height = yAxis[1] * gridSize + gridSize - area.y;
+    return area;
+}
+
+/*
+ * @Author: yorshka
+ * @Date: 2021-01-29 22:34:19
+ * @Last Modified by: yorshka
+ * @Last Modified time: 2021-01-30 20:53:22
+ *
+ * mesh实例，用来作为网格坐标层
+ */
+var Mesh = /** @class */ (function (_super) {
+    __extends(Mesh, _super);
+    function Mesh(options) {
+        var _this = _super.call(this, options) || this;
+        // 监听鼠标移动，计算当前hover shape
+        _this.handleMouseMove = function (point) {
+            var _a;
+            var grid = getMeshGrid(point.x, point.y, _this.gridSize).join(':');
+            var cache = _this.gridCache.get(grid);
+            if (cache) {
+                if ((_a = cache === null || cache === void 0 ? void 0 : cache.list) === null || _a === void 0 ? void 0 : _a.length) {
+                    var shape = _this.shapeBucket.get(cache.list[0]);
+                    bus.namespace(Namespace.INTERACTION).emit(EventTypes.HOVER, shape);
+                    return;
+                }
+            }
+            bus.namespace(Namespace.INTERACTION).emit(EventTypes.HOVER, null);
+        };
+        // 鼠标点击
+        _this.handleMouseDown = function (point) {
+            var _a;
+            var grid = getMeshGrid(point.x, point.y, _this.gridSize).join(':');
+            console.log('grid', grid);
+            var cache = _this.gridCache.get(grid);
+            if (cache) {
+                if ((_a = cache === null || cache === void 0 ? void 0 : cache.list) === null || _a === void 0 ? void 0 : _a.length) {
+                    var shape = _this.shapeBucket.get(cache.list[0]);
+                    bus.namespace(Namespace.INTERACTION).emit(EventTypes.CLICK, shape);
+                    return;
+                }
+            }
+        };
+        _this.handleShapeReady = function (shape) {
+            console.log('shape ready', shape);
+            _this.recordShape(shape);
+        };
+        if (Mesh.instance) {
+            return Mesh.instance;
+        }
+        // 初始化缓存
+        _this.shapeBucket = new Map();
+        _this.gridCache = new Map();
+        // 记录格点大小
+        _this.gridSize = options.gridSize;
+        // 初始化监听器
+        _this.initListener();
+        Mesh.instance = _this;
+        return _this;
+    }
+    Mesh.prototype.destroy = function () {
+        bus.namespace(Namespace.INTERACTION).remove(EventTypes.MOVE);
+        bus.namespace(Namespace.INIT).remove(EventTypes.SHAPE);
+        bus.namespace(Namespace.INTERACTION).remove(EventTypes.MOUSEDOWN);
+    };
+    Mesh.prototype.initListener = function () {
+        // shape初始化事件
+        bus.namespace(Namespace.INIT).on(EventTypes.SHAPE, this.handleShapeReady);
+        // 鼠标移动事件
+        bus.namespace(Namespace.INTERACTION).on(EventTypes.MOVE, this.handleMouseMove);
+        // 鼠标点击事件
+        bus.namespace(Namespace.INTERACTION).on(EventTypes.MOUSEDOWN, this.handleMouseDown);
+    };
+    // 录入图形，形成坐标
+    Mesh.prototype.recordShape = function (shape) {
+        var id = shape.id;
+        // 记录原始数据
+        this.shapeBucket.set(id, shape);
+        // 更新格点缓存
+        this.updateGridCache(shape);
+    };
+    // 删除图形
+    // TODO: 优化性能
+    Mesh.prototype.removeShape = function (shape) {
+        var _this = this;
+        var id = shape.id, meshGridList = shape.meshGridList, zIndex = shape.zIndex;
+        this.shapeBucket.delete(id);
+        meshGridList.forEach(function (grid) {
+            var cache = _this.gridCache.get(grid);
+            if (cache) {
+                cache.list = cache.list.filter(function (i) { return i != id; });
+                if (cache.topIndex == zIndex && cache.list.length) {
+                    var topShape = _this.shapeBucket.get(cache.list[0]);
+                    cache.topIndex = topShape.zIndex;
+                }
+                _this.gridCache.set(grid, cache);
+            }
+        });
+    };
+    // 格点缓存
+    Mesh.prototype.updateGridCache = function (shape) {
+        var _this = this;
+        var id = shape.id, meshGridList = shape.meshGridList, zIndex = shape.zIndex;
+        meshGridList.forEach(function (grid) {
+            var cache = _this.gridCache.get(grid);
+            if (!cache) {
+                cache = {
+                    list: [],
+                    topIndex: 0,
+                };
+            }
+            var topIndex = cache.topIndex, list = cache.list;
+            // 更新最大zindex
+            if (zIndex > topIndex) {
+                topIndex = zIndex;
+                list.unshift(id);
+            }
+            else {
+                list.push(id);
+            }
+            // 更新缓存
+            _this.gridCache.set(grid, { topIndex: topIndex, list: list });
+            {
+                // debug
+                _this.fillGrid(grid);
+            }
+        });
+    };
+    // 辅助方法：渲染格子
+    Mesh.prototype.fillGrid = function (grid) {
+        var _a = __read(grid.split(':').map(function (i) { return Number(i); }), 2), x = _a[0], y = _a[1];
+        this.ctx.fillStyle = '#666';
+        this.ctx.fillRect(x * this.gridSize, y * this.gridSize, this.gridSize, this.gridSize);
+    };
+    // 渲染网格坐标
+    Mesh.prototype.renderGrid = function () {
+        var ctx = this.ctx;
+        ctx.lineWidth = 0.5;
+        ctx.strokeStyle = '#d2e2f7';
+        var gridSize = this.gridSize;
+        var xStart = 0;
+        var xEnd = this.container.clientWidth;
+        var yStart = 0;
+        var yEnd = this.container.clientHeight;
+        ctx.beginPath();
+        // 画网格, x axios
+        for (var x = xStart; x <= xEnd + gridSize; x += gridSize) {
+            // 超出坐标系绘制，防止有空隙
+            ctx.moveTo(x, yStart - gridSize);
+            ctx.lineTo(x, yEnd + gridSize);
+        }
+        // 画网格, y axios
+        for (var y = yStart; y <= yEnd + gridSize; y += gridSize) {
+            // 超出坐标系绘制，防止有空隙
+            ctx.moveTo(xStart - gridSize, y);
+            ctx.lineTo(xEnd + gridSize, y);
+        }
+        var xOffset = 0;
+        var yOffset = 0;
+        // 画格线交点
+        for (var x = xStart - gridSize; x <= xEnd; x += gridSize) {
+            for (var y = yStart - gridSize; y <= yEnd; y += gridSize) {
+                if (Math.abs(x + xOffset) % 100 == 0 &&
+                    Math.abs(y + yOffset) % 100 == 0) {
+                    ctx.strokeStyle = '#000';
+                    ctx.strokeText("(" + (x + xOffset) / gridSize + "," + (y + yOffset) / gridSize + ")", x + 1, y - 1);
+                }
+            }
+        }
+        ctx.closePath();
+        ctx.stroke();
+    };
+    return Mesh;
+}(Canvas));
+
+/*
+ * @Author: yorshka
  * @Date: 2021-01-29 23:04:21
  * @Last Modified by: yorshka
- * @Last Modified time: 2021-01-30 18:40:43
+ * @Last Modified time: 2021-01-30 22:00:25
  *
  * shape类型，用来储存需要被绘制的数据
  */
@@ -1092,6 +1146,13 @@ var Shape = /** @class */ (function () {
         this.y = y;
         this.radius = radius;
         this.zIndex = zIndex;
+        this.coverArea = {
+            x: 0,
+            y: 0,
+            width: 0,
+            height: 0,
+        };
+        this.fillColor = '#00BFFF';
         //   生成随机id
         this.id = Math.random().toString(36).substring(2);
         // shape晚于mesh实例化，所以此时mesh必定已经实例化完成
@@ -1106,6 +1167,8 @@ var Shape = /** @class */ (function () {
         var _this = this;
         setTimeout(function () {
             var gridList = getCoveredGrid(_this.x, _this.y, _this.radius, _this.gridSize);
+            // 记录cover区域，用于局部擦除
+            _this.coverArea = getCoverArea(_this.x, _this.y, _this.radius, _this.gridSize);
             _this.meshGridList = gridList;
             console.log('finish cache: ', _this.zIndex, _this.id);
             bus.namespace(Namespace.INIT).emit(EventTypes.SHAPE, _this);
@@ -1134,27 +1197,60 @@ var Shape = /** @class */ (function () {
 
 /*
  * @Author: yorshka
+ * @Date: 2021-01-30 20:58:08
+ * @Last Modified by: yorshka
+ * @Last Modified time: 2021-01-30 21:00:28
+ */
+function getNextColor(color) {
+    var index = COLOR_SET.indexOf(color);
+    if (index >= 0) {
+        if (index + 1 < COLOR_SET.length) {
+            return COLOR_SET[index + 1];
+        }
+    }
+    return COLOR_SET[0];
+}
+
+/*
+ * @Author: yorshka
  * @Date: 2021-01-29 10:25:35
  * @Last Modified by: yorshka
- * @Last Modified time: 2021-01-30 20:05:16
+ * @Last Modified time: 2021-01-30 22:04:57
  *
  * canvas demo.
  *
  */
 var Demo = /** @class */ (function () {
     function Demo(options) {
+        var _this = this;
         // 粗粒化格子大小
         this.gridSize = 25;
         // 缓存层
         this.cacheLayer = null;
-        this.clickHandler = function (e) {
-            console.log('click', e);
-        };
-        this.moveHandler = function (e) {
-            // console.log('move', e);
-        };
-        this.hoverHandler = function (e) {
-            console.log('hover', e);
+        // 点击元素
+        this.clickHandler = function (shape) {
+            console.log('click', shape);
+            var fillColor = shape.fillColor, meshGridList = shape.meshGridList;
+            // 更新颜色
+            shape.fillColor = getNextColor(fillColor);
+            // 1. 局部擦除
+            // 2. 按照zindex重绘被擦除的元素
+            // 建立局部刷新区域
+            // 待重绘shape
+            var reRenderShape = [];
+            // 记录待重绘元素
+            meshGridList.forEach(function (grid) {
+                var cache = _this.meshLayer.gridCache.get(grid);
+                if (cache) {
+                    reRenderShape = __spread(reRenderShape, cache.list);
+                }
+            });
+            console.log('clearArea', shape.coverArea);
+            reRenderShape = __spread(new Set(__spread(reRenderShape)));
+            console.log('reRenderShape', reRenderShape);
+            // 擦除
+            _this.clearGrid(shape.coverArea);
+            // 重绘
         };
         var name = options.container;
         var container = document.getElementById(name || 'container');
@@ -1168,8 +1264,8 @@ var Demo = /** @class */ (function () {
             container: container,
             zIndex: 4,
         });
+        // cache层，快速擦除，内容较少
         {
-            // cache层，快速擦除，内容较少
             this.cacheLayer = new Highlight({
                 id: 'cache',
                 container: container,
@@ -1202,13 +1298,23 @@ var Demo = /** @class */ (function () {
     }
     Demo.prototype.initListener = function () {
         bus.namespace(Namespace.INTERACTION).on(EventTypes.CLICK, this.clickHandler);
-        bus.namespace(Namespace.INTERACTION).on(EventTypes.MOVE, this.moveHandler);
-        bus.namespace(Namespace.INTERACTION).on(EventTypes.HOVER, this.hoverHandler);
+        // EventBus.namespace(Namespace.INTERACTION).on(
+        //   EventTypes.MOVE,
+        //   this.moveHandler
+        // );
+        // EventBus.namespace(Namespace.INTERACTION).on(
+        //   EventTypes.HOVER,
+        //   this.hoverHandler
+        // );
     };
     Demo.prototype.uninit = function () {
         bus.namespace(Namespace.INTERACTION).remove(EventTypes.CLICK);
-        bus.namespace(Namespace.INTERACTION).remove(EventTypes.MOVE);
-        bus.namespace(Namespace.INTERACTION).remove(EventTypes.HOVER);
+        // EventBus.namespace(Namespace.INTERACTION).remove(EventTypes.MOVE);
+        // EventBus.namespace(Namespace.INTERACTION).remove(EventTypes.HOVER);
+    };
+    // 局部擦除
+    Demo.prototype.clearGrid = function (area) {
+        this.getCtx().clearRect(area.x, area.y, area.width, area.height);
     };
     // 销毁（其实不用调用）
     Demo.prototype.destroy = function () {
@@ -1220,19 +1326,6 @@ var Demo = /** @class */ (function () {
     Demo.prototype.getCtx = function () {
         return this.displayLayer.ctx;
     };
-    // 主渲染方法
-    // TODO: 局部刷新
-    // public render(ctx?: CanvasRenderingContext2D): void {
-    //   if (!ctx) {
-    //     // console.log('canvas context is not ready!');
-    //     // return;
-    //     ctx = this.displayLayer.ctx;
-    //   }
-    //   ctx.beginPath();
-    //   ctx.ellipse(300, 300, 100, 100, 0, 0, 2 * Math.PI);
-    //   ctx.stroke();
-    //   ctx.closePath();
-    // }
     // 生成count个随机shape
     Demo.prototype.generateShape = function (count) {
         var list = [];
@@ -1255,18 +1348,18 @@ var Demo = /** @class */ (function () {
  * @Author: yorshka
  * @Date: 2021-01-29 22:19:49
  * @Last Modified by: yorshka
- * @Last Modified time: 2021-01-30 20:09:18
+ * @Last Modified time: 2021-01-30 21:16:48
  *
  * demo: 数百个圆，随机排布，可被鼠标点击。点击后变色并置于顶层，其他圆的绘制顺序不变。
  */
-// 新建demo
+// 新建demo实例
 var demo = new Demo({
     container: 'container',
 });
 window.demo = demo;
 // 生成图形
 var shapeList = demo.generateShape(100);
-console.log('shapeList', shapeList);
+// 渲染图像
 var ctx = demo.getCtx();
 shapeList.forEach(function (shape) {
     shape.render(ctx);

@@ -15,6 +15,8 @@
     "noImplicitThis": false /* Raise error on 'this' expressions with an implied 'any' type. */,
     "alwaysStrict": true /* Parse in strict mode and emit "use strict" for each source file. */,
 
+    "downlevelIteration": true,
+
     "noUnusedLocals": false,
     "noUnusedParameters": false,
     /* Module Resolution Options */

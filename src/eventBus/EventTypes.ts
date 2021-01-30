@@ -2,9 +2,11 @@
  * 消息类型
  */
 export enum EventTypes {
-  CLICK = 'click',
-  HOVER = 'hover',
   MOVE = 'move',
+  MOUSEDOWN = 'mousedown',
+
+  HOVER = 'hover',
+  CLICK = 'click',
 
   SHAPE = 'shape',
 }

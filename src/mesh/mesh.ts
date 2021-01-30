@@ -2,7 +2,7 @@
  * @Author: yorshka
  * @Date: 2021-01-29 22:34:19
  * @Last Modified by: yorshka
- * @Last Modified time: 2021-01-30 20:10:26
+ * @Last Modified time: 2021-01-30 20:53:22
  *
  * mesh实例，用来作为网格坐标层
  */
@@ -40,29 +40,63 @@ export default class Mesh extends Canvas {
     // 记录格点大小
     this.gridSize = options.gridSize;
 
+    // 初始化监听器
+    this.initListener();
+
+    Mesh.instance = this;
+  }
+
+  public destroy(): void {
+    EventBus.namespace(Namespace.INTERACTION).remove(EventTypes.MOVE);
+    EventBus.namespace(Namespace.INIT).remove(EventTypes.SHAPE);
+    EventBus.namespace(Namespace.INTERACTION).remove(EventTypes.MOUSEDOWN);
+  }
+
+  private initListener(): void {
+    // shape初始化事件
     EventBus.namespace(Namespace.INIT).on(
       EventTypes.SHAPE,
       this.handleShapeReady
     );
 
+    // 鼠标移动事件
     EventBus.namespace(Namespace.INTERACTION).on(
       EventTypes.MOVE,
       this.handleMouseMove
     );
 
-    Mesh.instance = this;
+    // 鼠标点击事件
+    EventBus.namespace(Namespace.INTERACTION).on(
+      EventTypes.MOUSEDOWN,
+      this.handleMouseDown
+    );
   }
 
   // 监听鼠标移动，计算当前hover shape
   private handleMouseMove = (point: Point) => {
     const grid = getMeshGrid(point.x, point.y, this.gridSize).join(':');
-    console.log('grid', grid);
     const cache = this.gridCache.get(grid);
     if (cache) {
-      console.log('has content', cache);
       if (cache?.list?.length) {
         const shape = this.shapeBucket.get(cache.list[0]);
         EventBus.namespace(Namespace.INTERACTION).emit(EventTypes.HOVER, shape);
+        return;
+      }
+    }
+
+    EventBus.namespace(Namespace.INTERACTION).emit(EventTypes.HOVER, null);
+  };
+
+  // 鼠标点击
+  private handleMouseDown = (point: Point) => {
+    const grid = getMeshGrid(point.x, point.y, this.gridSize).join(':');
+    console.log('grid', grid);
+    const cache = this.gridCache.get(grid);
+    if (cache) {
+      if (cache?.list?.length) {
+        const shape = this.shapeBucket.get(cache.list[0]);
+        EventBus.namespace(Namespace.INTERACTION).emit(EventTypes.CLICK, shape);
+        return;
       }
     }
   };
@@ -84,6 +118,7 @@ export default class Mesh extends Canvas {
   }
 
   // 删除图形
+  // TODO: 优化性能
   public removeShape(shape: Shape): void {
     const { id, meshGridList, zIndex } = shape;
     this.shapeBucket.delete(id);
@@ -132,6 +167,7 @@ export default class Mesh extends Canvas {
     });
   }
 
+  // 辅助方法：渲染格子
   private fillGrid(grid: string) {
     const [x, y] = grid.split(':').map((i) => Number(i));
     this.ctx.fillStyle = '#666';
@@ -156,10 +192,6 @@ export default class Mesh extends Canvas {
     const xEnd = this.container.clientWidth;
     const yStart = 0;
     const yEnd = this.container.clientHeight;
-
-    // console.log('xStart, xEnd', xStart, xEnd);
-    // console.log('yStart, yEnd', yStart, yEnd);
-    // console.log('gridSize', gridSize);
 
     ctx.beginPath();
 
