@@ -2,7 +2,7 @@
  * @Author: yorshka
  * @Date: 2021-01-29 10:25:35
  * @Last Modified by: yorshka
- * @Last Modified time: 2021-01-30 01:15:22
+ * @Last Modified time: 2021-01-30 13:59:55
  *
  * canvas demo.
  *
@@ -12,11 +12,15 @@ import { Canvas } from '@src/canvas';
 import { EventBus, EventTypes, Namespace } from '@src/eventBus';
 import { Interaction } from '@src/interaction';
 import { Mesh } from '@src/mesh';
+import { Shape } from '@src/shape';
 import { DemoOptions } from './interface';
 
 export default class Demo {
   // 容器及实例
   private container: HTMLElement | null;
+
+  private width: number;
+  private height: number;
 
   // 交互控制句柄，可取消监听器
   private interactionHandler: Interaction;
@@ -39,6 +43,9 @@ export default class Demo {
     ) as HTMLElement;
     // 保存容器
     this.container = container;
+
+    this.width = container.clientWidth;
+    this.height = container.clientHeight;
 
     // 鼠标动作感知图层
     this.interactionLayer = new Canvas({
@@ -70,9 +77,9 @@ export default class Demo {
     });
 
     // 交互handler
-    this.interactionHandler = new Interaction({
-      target: this.interactionLayer,
-    });
+    // this.interactionHandler = new Interaction({
+    //   target: this.interactionLayer,
+    // });
 
     this.initListener();
   }
@@ -116,6 +123,10 @@ export default class Demo {
     this.uninit();
   }
 
+  public getCtx(): CanvasRenderingContext2D {
+    return this.displayLayer.ctx;
+  }
+
   // 主渲染方法
   // TODO: 局部刷新
   public render(ctx?: CanvasRenderingContext2D): void {
@@ -131,5 +142,24 @@ export default class Demo {
     ctx.stroke();
 
     ctx.closePath();
+  }
+
+  // 生成count个随机shape
+  public generateShape(count: number): Shape[] {
+    const list = [];
+
+    while (count) {
+      list.push(
+        new Shape({
+          x: Math.floor(Math.random() * this.width),
+          y: Math.floor(Math.random() * this.height),
+          radius: Math.floor(Math.random() * 40 + 10), // 10 ~ 50
+          zIndex: count,
+        })
+      );
+      count--;
+    }
+
+    return list;
   }
 }

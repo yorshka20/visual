@@ -2,7 +2,7 @@
  * @Author: yorshka
  * @Date: 2021-01-29 22:34:19
  * @Last Modified by: yorshka
- * @Last Modified time: 2021-01-29 23:53:43
+ * @Last Modified time: 2021-01-30 13:27:21
  *
  * mesh实例，用来作为网格坐标层
  */
@@ -13,6 +13,10 @@ import { MeshOptions } from './interface';
 export default class Mesh extends Canvas {
   // 缓冲数据集
   private shapeBucket: Map<string, any>;
+
+  // mesh网格格子大小
+  gridGapX: number;
+  gridGapY: number;
 
   constructor(options: MeshOptions) {
     super(options);
@@ -32,5 +36,13 @@ export default class Mesh extends Canvas {
   public removeShape(shape: any): void {
     const { id } = shape;
     this.shapeBucket.delete(id);
+  }
+
+  // 获取point在mesh中最近的grid位置
+  private getMeshGrid(x: number, y: number): number[] {
+    const gx = Math.floor(x / this.gridGapX);
+    const gy = Math.floor(y / this.gridGapY);
+
+    return [gx, gy];
   }
 }

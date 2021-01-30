@@ -2,7 +2,7 @@
  * @Author: yorshka
  * @Date: 2021-01-29 22:43:14
  * @Last Modified by: yorshka
- * @Last Modified time: 2021-01-30 01:09:22
+ * @Last Modified time: 2021-01-30 14:10:05
  *
  * 自定义canvas类型，大小与容器一致
  */
@@ -43,9 +43,12 @@ export default class Canvas {
     this.canvasEle = canvas;
     this.ctx = canvas.getContext('2d');
 
+    // 设置层叠顺序
+    this.ctx.globalCompositeOperation = 'source-over';
+
     // 初始化stroke样式(default)
+    this.ctx.lineWidth = 1;
     this.ctx.strokeStyle = '#000';
-    this.ctx.lineWidth = 2;
 
     //   mount canvas element
     if (!hide) {
