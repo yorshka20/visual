@@ -258,9 +258,34 @@ var Mesh = /** @class */ (function (_super) {
 
 /*
  * @Author: yorshka
+ * @Date: 2021-01-30 15:08:51
+ * @Last Modified by: yorshka
+ * @Last Modified time: 2021-01-30 17:09:48
+ */
+// 获得shape cover的格子
+function getCoveredGrid(x, y, radius, gridSize) {
+    var list = [];
+    // boundingBox四顶点
+    var lt = [x - radius, y - radius];
+    var rt = [x + radius, y - radius];
+    var lb = [x - radius, y + radius];
+    var xAxis = [Math.floor(lt[0] / gridSize), Math.floor(rt[0] / gridSize)];
+    var yAxis = [Math.floor(lt[1] / gridSize), Math.floor(lb[0] / gridSize)];
+    console.log('xAxis,yAxis', xAxis, yAxis);
+    for (var x_1 = xAxis[0]; x_1 <= xAxis[1]; x_1++) {
+        for (var y_1 = yAxis[0]; y_1 <= yAxis[1]; y_1++) {
+            list.push(x_1 + ":" + y_1);
+        }
+    }
+    console.log('list', list);
+    return list;
+}
+
+/*
+ * @Author: yorshka
  * @Date: 2021-01-29 23:04:21
  * @Last Modified by: yorshka
- * @Last Modified time: 2021-01-30 15:45:30
+ * @Last Modified time: 2021-01-30 16:59:28
  *
  * shape类型，用来储存需要被绘制的数据
  */
@@ -285,23 +310,10 @@ var Shape = /** @class */ (function () {
     Shape.prototype.initCache = function () {
         var _this = this;
         setTimeout(function () {
-            _this.gridSize;
-            _this.gridSize;
-            [_this.x - _this.radius, _this.x + _this.radius];
-            [_this.y - _this.radius, _this.y + _this.radius];
-            // const xList = width[0] /
-            // console.log('finish cache: ', this.zIndex, this.id);
+            var gridList = getCoveredGrid(_this.x, _this.y, _this.radius, _this.gridSize);
+            _this.meshGridList = gridList;
+            console.log('finish cache: ', _this.zIndex, _this.id);
         }, 0);
-        //  shape.points.forEach((point: Point, index: number) => {
-        //    const [x, y] = this.getMeshGrid(point.x, point.y);
-        //    const id = [x, y].join(':');
-        //   });
-        //   // 生成meshGrid信息
-        //   this.meshGrids.push({
-        //     anchor: new Point(x * this.gridGapX, y * this.gridGapY),
-        //     id,
-        //   });
-        //   this.simpleGridList = [...new Set([...this.simpleGridList, id])];
     };
     // 自身渲染
     Shape.prototype.render = function (ctx, fillColor) {

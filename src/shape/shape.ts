@@ -2,12 +2,13 @@
  * @Author: yorshka
  * @Date: 2021-01-29 23:04:21
  * @Last Modified by: yorshka
- * @Last Modified time: 2021-01-30 16:24:15
+ * @Last Modified time: 2021-01-30 16:59:28
  *
  * shape类型，用来储存需要被绘制的数据
  */
 
 import { Mesh } from '@src/mesh';
+import { getCoveredGrid } from './utils';
 
 interface ShapeOptions {
   x: number;
@@ -59,15 +60,15 @@ export default class Shape {
   // 2. 记录每个grid的id
   private initCache(): void {
     setTimeout(() => {
-      const gridX = this.gridSize;
-      const gridY = this.gridSize;
+      const gridList = getCoveredGrid(
+        this.x,
+        this.y,
+        this.radius,
+        this.gridSize
+      );
 
-      const width = [this.x - this.radius, this.x + this.radius];
-      const height = [this.y - this.radius, this.y + this.radius];
-
-      // const xList = width[0] /
-
-      // console.log('finish cache: ', this.zIndex, this.id);
+      this.meshGridList = gridList;
+      console.log('finish cache: ', this.zIndex, this.id);
     }, 0);
   }
 
