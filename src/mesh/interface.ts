@@ -2,7 +2,7 @@
  * @Author: yorshka
  * @Date: 2021-01-29 22:35:02
  * @Last Modified by: yorshka
- * @Last Modified time: 2021-01-30 18:40:01
+ * @Last Modified time: 2021-01-30 18:56:51
  */
 
 import { CanvasOptions } from '@src/canvas/interface';
@@ -32,4 +32,14 @@ export class BoundingBox {
     this.width = width;
     this.height = height;
   }
+}
+
+export interface GridCacheList {
+  topIndex: number;
+  list: string[];
+}
+
+export interface Point {
+  x: number;
+  y: number;
 }

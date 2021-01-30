@@ -2,7 +2,7 @@
  * @Author: yorshka
  * @Date: 2021-01-29 23:38:02
  * @Last Modified by: yorshka
- * @Last Modified time: 2021-01-30 18:40:39
+ * @Last Modified time: 2021-01-30 19:41:13
  *
  * 交互感知层
  */
@@ -60,7 +60,7 @@ export default class Interaction {
         x: offsetX,
         y: offsetY,
       });
-    }, 50)(e);
+    }, 20)(e);
 
   private mouseDownHandler = (e: MouseEvent) => {
     const { offsetX, offsetY } = e;

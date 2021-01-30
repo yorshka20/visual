@@ -2,7 +2,7 @@
  * @Author: yorshka
  * @Date: 2021-01-29 22:19:49
  * @Last Modified by: yorshka
- * @Last Modified time: 2021-01-30 13:55:59
+ * @Last Modified time: 2021-01-30 20:09:18
  *
  * demo: 数百个圆，随机排布，可被鼠标点击。点击后变色并置于顶层，其他圆的绘制顺序不变。
  */
@@ -17,7 +17,7 @@ const demo = new Demo({
 window.demo = demo;
 
 // 生成图形
-const shapeList = demo.generateShape(200);
+const shapeList = demo.generateShape(100);
 
 console.log('shapeList', shapeList);
 

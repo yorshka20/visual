@@ -2,13 +2,14 @@
  * @Author: yorshka
  * @Date: 2021-01-29 10:25:35
  * @Last Modified by: yorshka
- * @Last Modified time: 2021-01-30 18:40:41
+ * @Last Modified time: 2021-01-30 20:05:16
  *
  * canvas demo.
  *
  */
 
 import { Canvas } from '@src/canvas';
+import { SHOW_HIGHLIGHT, SHOW_MESH } from '@src/config';
 import { EventBus, EventTypes, Namespace } from '@src/eventBus';
 import { Highlight } from '@src/highlight';
 import { Interaction } from '@src/interaction';
@@ -58,12 +59,14 @@ export default class Demo {
       zIndex: 4,
     });
 
-    // cache层，快速擦除，内容较少
-    this.cacheLayer = new Highlight({
-      id: 'cache',
-      container,
-      zIndex: 3,
-    });
+    if (SHOW_HIGHLIGHT) {
+      // cache层，快速擦除，内容较少
+      this.cacheLayer = new Highlight({
+        id: 'cache',
+        container,
+        zIndex: 3,
+      });
+    }
 
     // 主画布
     this.displayLayer = new Canvas({
@@ -81,12 +84,15 @@ export default class Demo {
       gridSize: this.gridSize,
     });
 
-    this.meshLayer.renderGrid();
+    // 渲染网格背景
+    if (SHOW_MESH) {
+      this.meshLayer.renderGrid();
+    }
 
     // 交互handler
-    // this.interactionHandler = new Interaction({
-    //   target: this.interactionLayer,
-    // });
+    this.interactionHandler = new Interaction({
+      target: this.interactionLayer,
+    });
 
     this.initListener();
   }
@@ -116,7 +122,7 @@ export default class Demo {
     console.log('click', e);
   };
   private moveHandler = (e: any) => {
-    console.log('move', e);
+    // console.log('move', e);
   };
   private hoverHandler = (e: any) => {
     console.log('hover', e);
@@ -136,20 +142,20 @@ export default class Demo {
 
   // 主渲染方法
   // TODO: 局部刷新
-  public render(ctx?: CanvasRenderingContext2D): void {
-    if (!ctx) {
-      // console.log('canvas context is not ready!');
-      // return;
-      ctx = this.displayLayer.ctx;
-    }
+  // public render(ctx?: CanvasRenderingContext2D): void {
+  //   if (!ctx) {
+  //     // console.log('canvas context is not ready!');
+  //     // return;
+  //     ctx = this.displayLayer.ctx;
+  //   }
 
-    ctx.beginPath();
+  //   ctx.beginPath();
 
-    ctx.ellipse(300, 300, 100, 100, 0, 0, 2 * Math.PI);
-    ctx.stroke();
+  //   ctx.ellipse(300, 300, 100, 100, 0, 0, 2 * Math.PI);
+  //   ctx.stroke();
 
-    ctx.closePath();
-  }
+  //   ctx.closePath();
+  // }
 
   // 生成count个随机shape
   public generateShape(count: number): Shape[] {

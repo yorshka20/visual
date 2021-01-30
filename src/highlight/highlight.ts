@@ -2,7 +2,7 @@
  * @Author: yorshka
  * @Date: 2021-01-30 17:18:10
  * @Last Modified by: yorshka
- * @Last Modified time: 2021-01-30 17:29:58
+ * @Last Modified time: 2021-01-30 19:37:51
  *
  * 高亮层，绘制鼠标感知状态
  */
@@ -25,7 +25,8 @@ export default class Highlight extends Canvas {
   }
 
   private set hoverTarget(val: Shape) {
-    if (val.id !== this._target.id) {
+    console.log('shape', val);
+    if (val.id !== this._target?.id || !this._target) {
       this._target = val;
       this.clean();
       this.drawHighlight(val);
@@ -37,6 +38,8 @@ export default class Highlight extends Canvas {
 
     //   设置高亮stroke颜色
     this.ctx.strokeStyle = '#00FF00';
+
+    this._target = null;
 
     //   初始化监听器
     this.init();
@@ -65,6 +68,7 @@ export default class Highlight extends Canvas {
   private drawHighlight(shape: Shape): void {
     const rect = computeBoundingBox(shape);
 
+    console.log('rect', rect);
     this.ctx.strokeRect(rect.x, rect.y, rect.width, rect.height);
   }
 
