@@ -962,7 +962,7 @@ function getCoverArea(x, y, radius, gridSize) {
  * @Author: yorshka
  * @Date: 2021-01-29 22:34:19
  * @Last Modified by: yorshka
- * @Last Modified time: 2021-01-30 20:53:22
+ * @Last Modified time: 2021-01-30 22:45:49
  *
  * mesh实例，用来作为网格坐标层
  */
@@ -1215,7 +1215,7 @@ function getNextColor(color) {
  * @Author: yorshka
  * @Date: 2021-01-29 10:25:35
  * @Last Modified by: yorshka
- * @Last Modified time: 2021-01-30 22:04:57
+ * @Last Modified time: 2021-01-30 22:56:20
  *
  * canvas demo.
  *
@@ -1233,6 +1233,8 @@ var Demo = /** @class */ (function () {
             var fillColor = shape.fillColor, meshGridList = shape.meshGridList;
             // 更新颜色
             shape.fillColor = getNextColor(fillColor);
+            // 更新缓存
+            _this.meshLayer.shapeBucket.set(shape.id, shape);
             // 1. 局部擦除
             // 2. 按照zindex重绘被擦除的元素
             // 建立局部刷新区域
@@ -1251,6 +1253,7 @@ var Demo = /** @class */ (function () {
             // 擦除
             _this.clearGrid(shape.coverArea);
             // 重绘
+            _this.reRender(reRenderShape, shape);
         };
         var name = options.container;
         var container = document.getElementById(name || 'container');
@@ -1315,6 +1318,21 @@ var Demo = /** @class */ (function () {
     // 局部擦除
     Demo.prototype.clearGrid = function (area) {
         this.getCtx().clearRect(area.x, area.y, area.width, area.height);
+    };
+    // 局部重绘
+    Demo.prototype.reRender = function (list, targetShape) {
+        var _this = this;
+        // targetShape最后render
+        // 按zindex顺序绘制
+        var shapeList = list.map(function (id) { return _this.meshLayer.shapeBucket.get(id); });
+        shapeList.sort(function (a, b) { return b.zIndex - a.zIndex; });
+        // console.log('shapeList', shapeList);
+        var ctx = this.getCtx();
+        shapeList.forEach(function (shape) {
+            shape.render(ctx);
+        });
+        // 最后绘制
+        targetShape.render(ctx, targetShape.fillColor);
     };
     // 销毁（其实不用调用）
     Demo.prototype.destroy = function () {

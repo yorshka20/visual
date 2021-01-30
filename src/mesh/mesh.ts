@@ -2,7 +2,7 @@
  * @Author: yorshka
  * @Date: 2021-01-29 22:34:19
  * @Last Modified by: yorshka
- * @Last Modified time: 2021-01-30 20:53:22
+ * @Last Modified time: 2021-01-30 22:45:49
  *
  * mesh实例，用来作为网格坐标层
  */
@@ -18,7 +18,7 @@ export default class Mesh extends Canvas {
   static instance: Mesh;
 
   // 缓冲数据集
-  private shapeBucket: Map<string, any>;
+  shapeBucket: Map<string, Shape>;
 
   // 格点缓存，以gridId为key，记录cover该grid的shape的list，shape按zindex倒序排
   gridCache: Map<string, GridCacheList>;

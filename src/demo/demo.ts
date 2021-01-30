@@ -2,7 +2,7 @@
  * @Author: yorshka
  * @Date: 2021-01-29 10:25:35
  * @Last Modified by: yorshka
- * @Last Modified time: 2021-01-30 22:04:57
+ * @Last Modified time: 2021-01-30 22:56:20
  *
  * canvas demo.
  *
@@ -125,6 +125,8 @@ export default class Demo {
     const { fillColor, meshGridList } = shape;
     // 更新颜色
     shape.fillColor = getNextColor(fillColor);
+    // 更新缓存
+    this.meshLayer.shapeBucket.set(shape.id, shape);
     // 1. 局部擦除
     // 2. 按照zindex重绘被擦除的元素
 
@@ -145,11 +147,28 @@ export default class Demo {
     // 擦除
     this.clearGrid(shape.coverArea);
     // 重绘
+    this.reRender(reRenderShape, shape);
   };
 
   // 局部擦除
   private clearGrid(area: CoverArea): void {
     this.getCtx().clearRect(area.x, area.y, area.width, area.height);
+  }
+
+  // 局部重绘
+  private reRender(list: string[], targetShape: Shape): void {
+    // targetShape最后render
+    // 按zindex顺序绘制
+    const shapeList = list.map((id) => this.meshLayer.shapeBucket.get(id));
+    shapeList.sort((a, b) => b.zIndex - a.zIndex);
+    // console.log('shapeList', shapeList);
+    const ctx = this.getCtx();
+    shapeList.forEach((shape) => {
+      shape.render(ctx);
+    });
+
+    // 最后绘制
+    targetShape.render(ctx, targetShape.fillColor);
   }
 
   // 销毁（其实不用调用）
