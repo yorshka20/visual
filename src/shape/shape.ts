@@ -2,7 +2,7 @@
  * @Author: yorshka
  * @Date: 2021-01-29 23:04:21
  * @Last Modified by: yorshka
- * @Last Modified time: 2021-01-30 22:00:25
+ * @Last Modified time: 2021-01-31 13:28:16
  *
  * shape类型，用来储存需要被绘制的数据
  */
@@ -83,8 +83,16 @@ export default class Shape {
     }, 0);
   }
 
+  public setColor(color: string): void {
+    this.fillColor = color;
+  }
+
+  public levelUp(): void {
+    this.zIndex += 1;
+  }
+
   // 自身渲染
-  public render(ctx: CanvasRenderingContext2D, fillColor = '#00BFFF'): void {
+  public render(ctx: CanvasRenderingContext2D): void {
     if (!ctx) {
       return;
     }
@@ -98,7 +106,7 @@ export default class Shape {
     // 填充
     ctx.beginPath();
     ctx.arc(this.x, this.y, this.radius, 0, 2 * Math.PI);
-    ctx.fillStyle = fillColor;
+    ctx.fillStyle = this.fillColor;
     ctx.fill();
     ctx.closePath();
   }

@@ -2,7 +2,7 @@
  * @Author: yorshka
  * @Date: 2021-01-29 10:25:35
  * @Last Modified by: yorshka
- * @Last Modified time: 2021-01-30 22:56:20
+ * @Last Modified time: 2021-01-31 13:28:23
  *
  * canvas demo.
  *
@@ -26,7 +26,7 @@ export default class Demo {
   private height: number;
 
   // 粗粒化格子大小
-  private gridSize = 25;
+  private gridSize = 20;
 
   // 交互控制句柄，可取消监听器
   private interactionHandler: Interaction;
@@ -124,9 +124,10 @@ export default class Demo {
     console.log('click', shape);
     const { fillColor, meshGridList } = shape;
     // 更新颜色
-    shape.fillColor = getNextColor(fillColor);
-    // 更新缓存
-    this.meshLayer.shapeBucket.set(shape.id, shape);
+    shape.setColor(getNextColor(fillColor));
+    // 更新位置
+    shape.levelUp();
+
     // 1. 局部擦除
     // 2. 按照zindex重绘被擦除的元素
 
@@ -168,7 +169,7 @@ export default class Demo {
     });
 
     // 最后绘制
-    targetShape.render(ctx, targetShape.fillColor);
+    targetShape.render(ctx);
   }
 
   // 销毁（其实不用调用）
@@ -191,7 +192,7 @@ export default class Demo {
       const shape = new Shape({
         x: Math.floor(Math.random() * this.width),
         y: Math.floor(Math.random() * this.height),
-        radius: Math.floor(Math.random() * 40 + 10), // 10 ~ 50
+        radius: Math.floor(Math.random() * 10 + 30), // 30 ~ 40
         zIndex: count,
       });
       list.push(shape);

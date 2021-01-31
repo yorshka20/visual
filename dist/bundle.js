@@ -962,7 +962,7 @@ function getCoverArea(x, y, radius, gridSize) {
  * @Author: yorshka
  * @Date: 2021-01-29 22:34:19
  * @Last Modified by: yorshka
- * @Last Modified time: 2021-01-30 22:45:49
+ * @Last Modified time: 2021-01-31 13:21:15
  *
  * mesh实例，用来作为网格坐标层
  */
@@ -988,7 +988,7 @@ var Mesh = /** @class */ (function (_super) {
         _this.handleMouseDown = function (point) {
             var _a;
             var grid = getMeshGrid(point.x, point.y, _this.gridSize).join(':');
-            console.log('grid', grid);
+            // console.log('grid', grid);
             var cache = _this.gridCache.get(grid);
             if (cache) {
                 if ((_a = cache === null || cache === void 0 ? void 0 : cache.list) === null || _a === void 0 ? void 0 : _a.length) {
@@ -1134,7 +1134,7 @@ var Mesh = /** @class */ (function (_super) {
  * @Author: yorshka
  * @Date: 2021-01-29 23:04:21
  * @Last Modified by: yorshka
- * @Last Modified time: 2021-01-30 22:00:25
+ * @Last Modified time: 2021-01-31 13:28:16
  *
  * shape类型，用来储存需要被绘制的数据
  */
@@ -1174,9 +1174,14 @@ var Shape = /** @class */ (function () {
             bus.namespace(Namespace.INIT).emit(EventTypes.SHAPE, _this);
         }, 0);
     };
+    Shape.prototype.setColor = function (color) {
+        this.fillColor = color;
+    };
+    Shape.prototype.levelUp = function () {
+        this.zIndex += 1;
+    };
     // 自身渲染
-    Shape.prototype.render = function (ctx, fillColor) {
-        if (fillColor === void 0) { fillColor = '#00BFFF'; }
+    Shape.prototype.render = function (ctx) {
         if (!ctx) {
             return;
         }
@@ -1188,7 +1193,7 @@ var Shape = /** @class */ (function () {
         // 填充
         ctx.beginPath();
         ctx.arc(this.x, this.y, this.radius, 0, 2 * Math.PI);
-        ctx.fillStyle = fillColor;
+        ctx.fillStyle = this.fillColor;
         ctx.fill();
         ctx.closePath();
     };
@@ -1215,7 +1220,7 @@ function getNextColor(color) {
  * @Author: yorshka
  * @Date: 2021-01-29 10:25:35
  * @Last Modified by: yorshka
- * @Last Modified time: 2021-01-30 22:56:20
+ * @Last Modified time: 2021-01-31 13:28:23
  *
  * canvas demo.
  *
@@ -1224,7 +1229,7 @@ var Demo = /** @class */ (function () {
     function Demo(options) {
         var _this = this;
         // 粗粒化格子大小
-        this.gridSize = 25;
+        this.gridSize = 20;
         // 缓存层
         this.cacheLayer = null;
         // 点击元素
@@ -1232,9 +1237,9 @@ var Demo = /** @class */ (function () {
             console.log('click', shape);
             var fillColor = shape.fillColor, meshGridList = shape.meshGridList;
             // 更新颜色
-            shape.fillColor = getNextColor(fillColor);
-            // 更新缓存
-            _this.meshLayer.shapeBucket.set(shape.id, shape);
+            shape.setColor(getNextColor(fillColor));
+            // 更新位置
+            shape.levelUp();
             // 1. 局部擦除
             // 2. 按照zindex重绘被擦除的元素
             // 建立局部刷新区域
@@ -1332,7 +1337,7 @@ var Demo = /** @class */ (function () {
             shape.render(ctx);
         });
         // 最后绘制
-        targetShape.render(ctx, targetShape.fillColor);
+        targetShape.render(ctx);
     };
     // 销毁（其实不用调用）
     Demo.prototype.destroy = function () {
@@ -1351,7 +1356,7 @@ var Demo = /** @class */ (function () {
             var shape = new Shape({
                 x: Math.floor(Math.random() * this.width),
                 y: Math.floor(Math.random() * this.height),
-                radius: Math.floor(Math.random() * 40 + 10),
+                radius: Math.floor(Math.random() * 10 + 30),
                 zIndex: count,
             });
             list.push(shape);

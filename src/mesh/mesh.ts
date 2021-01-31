@@ -2,7 +2,7 @@
  * @Author: yorshka
  * @Date: 2021-01-29 22:34:19
  * @Last Modified by: yorshka
- * @Last Modified time: 2021-01-30 22:45:49
+ * @Last Modified time: 2021-01-31 13:21:15
  *
  * mesh实例，用来作为网格坐标层
  */
@@ -90,7 +90,7 @@ export default class Mesh extends Canvas {
   // 鼠标点击
   private handleMouseDown = (point: Point) => {
     const grid = getMeshGrid(point.x, point.y, this.gridSize).join(':');
-    console.log('grid', grid);
+    // console.log('grid', grid);
     const cache = this.gridCache.get(grid);
     if (cache) {
       if (cache?.list?.length) {
