@@ -2,7 +2,7 @@
  * @Author: yorshka
  * @Date: 2021-01-29 22:34:19
  * @Last Modified by: yorshka
- * @Last Modified time: 2021-01-31 16:08:25
+ * @Last Modified time: 2021-01-31 23:26:31
  *
  * mesh实例，用来作为网格坐标层
  */
@@ -12,8 +12,8 @@ import { SHOW_SHAPE_GRID } from '@src/config';
 import { EventBus, EventTypes, Namespace } from '@src/eventBus';
 import { Shape } from '@src/shape';
 import { getMeshGrid } from '@src/shape/utils';
-import { MeshOptions, GridCacheList, Point } from './interface';
-import { getDistance } from './utils';
+import { MeshOptions, Point, RankNode } from './interface';
+import { createListNode, getDistance } from './utils';
 
 export default class Mesh extends Canvas {
   static instance: Mesh;
@@ -22,7 +22,7 @@ export default class Mesh extends Canvas {
   shapeBucket: Map<string, Shape>;
 
   // 格点缓存，以gridId为key，记录cover该grid的shape的list，shape按zindex倒序排
-  gridCache: Map<string, GridCacheList>;
+  gridCache: Map<string, RankNode>;
 
   // mesh网格格子大小
   gridSize: number;
@@ -36,7 +36,7 @@ export default class Mesh extends Canvas {
 
     // 初始化缓存
     this.shapeBucket = new Map<string, any>();
-    this.gridCache = new Map<string, GridCacheList>();
+    this.gridCache = new Map<string, RankNode>();
 
     // 记录格点大小
     this.gridSize = options.gridSize;
@@ -78,11 +78,9 @@ export default class Mesh extends Canvas {
     const grid = getMeshGrid(point.x, point.y, this.gridSize).join(':');
     const cache = this.gridCache.get(grid);
     if (cache) {
-      if (cache?.list?.length) {
-        const shape = this.shapeBucket.get(cache.list[0]);
-        EventBus.namespace(Namespace.INTERACTION).emit(EventTypes.HOVER, shape);
-        return;
-      }
+      const shape = this.shapeBucket.get(cache.id);
+      EventBus.namespace(Namespace.INTERACTION).emit(EventTypes.HOVER, shape);
+      return;
     }
 
     EventBus.namespace(Namespace.INTERACTION).emit(EventTypes.HOVER, null);
@@ -94,40 +92,75 @@ export default class Mesh extends Canvas {
     // console.log('grid', grid);
     const cache = this.gridCache.get(grid);
     if (cache) {
-      if (cache?.list?.length) {
-        // 此处可精细化处理：
-        // 1. 缩小搜索范围，将list中shape重新按照zindex排序
-        const shapeList = cache.list.map((i) => this.shapeBucket.get(i));
-        shapeList.sort((a, b) => b.zIndex - a.zIndex);
-
-        // 2. 精确计算被点击元素
-        const len = shapeList.length;
-        let target = shapeList[0];
-        for (let i = 0; i < len; i++) {
-          const shape = shapeList[i];
-          const radius = getDistance(point.x, point.y, shape.x, shape.y);
-          if (radius <= shape.radius) {
-            target = shape;
-            break;
-          }
+      const head = cache.prev;
+      let curr = head.next;
+      let target: Shape;
+      while (curr) {
+        const shape = this.shapeBucket.get(curr.id);
+        const radius = getDistance(point.x, point.y, shape.x, shape.y);
+        if (radius <= shape.radius) {
+          target = shape;
+          break;
         }
+        curr = curr.next;
+      }
 
-        target.zIndex = shapeList[0].zIndex + 1;
-
-        // 直接修改，不好吗？
-        this.gridCache.get(grid).list = shapeList.map((i) => i.id);
-
-        EventBus.namespace(Namespace.INTERACTION).emit(
-          EventTypes.CLICK,
-          target
-        );
+      // 没找到，return
+      if (!target) {
         return;
       }
+
+      console.log('target', target);
+      console.log('cache.toArray()', cache.toArray());
+      const { id, zIndex } = target;
+      cache.deleteById(id);
+      const node = new RankNode({
+        id,
+        zIndex,
+      });
+      console.log('delete');
+      console.log('cache', cache);
+      cache.append(node);
+      console.log('cache.toArray()', cache.toArray());
+
+      EventBus.namespace(Namespace.INTERACTION).emit(EventTypes.CLICK, target);
     }
+
+    /* 以下为数组方法 */
+    // if (cache) {
+    //   if (cache?.list?.length) {
+    //     // 此处可精细化处理：
+    //     // 1. 缩小搜索范围，将list中shape重新按照zindex排序
+    //     const shapeList = cache.list.map((i) => this.shapeBucket.get(i));
+    //     shapeList.sort((a, b) => b.zIndex - a.zIndex);
+
+    //     // 2. 精确计算被点击元素
+    //     const len = shapeList.length;
+    //     let target = shapeList[0];
+    //     for (let i = 0; i < len; i++) {
+    //       const shape = shapeList[i];
+    //       const radius = getDistance(point.x, point.y, shape.x, shape.y);
+    //       if (radius <= shape.radius) {
+    //         target = shape;
+    //         break;
+    //       }
+    //     }
+
+    //     target.zIndex = shapeList[0].zIndex + 1;
+
+    //     // 直接修改，不好吗？
+    //     this.gridCache.get(grid).list = shapeList.map((i) => i.id);
+
+    //     EventBus.namespace(Namespace.INTERACTION).emit(
+    //       EventTypes.CLICK,
+    //       target
+    //     );
+    //     return;
+    //   }
+    // }
   };
 
   private handleShapeReady = (shape: Shape) => {
-    console.log('shape ready', shape);
     this.recordShape(shape);
   };
 
@@ -151,13 +184,12 @@ export default class Mesh extends Canvas {
     meshGridList.forEach((grid) => {
       const cache = this.gridCache.get(grid);
       if (cache) {
-        cache.list = cache.list.filter((i) => i != id);
-        if (cache.topIndex == zIndex && cache.list.length) {
-          const topShape = this.shapeBucket.get(cache.list[0]);
-          cache.topIndex = topShape.zIndex;
-        }
-
-        this.gridCache.set(grid, cache);
+        // cache.list = cache.list.filter((i) => i != id);
+        // if (cache.topIndex == zIndex && cache.list.length) {
+        //   const topShape = this.shapeBucket.get(cache.list[0]);
+        //   cache.topIndex = topShape.zIndex;
+        // }
+        // this.gridCache.set(grid, cache);
       }
     });
   }
@@ -169,22 +201,17 @@ export default class Mesh extends Canvas {
     meshGridList.forEach((grid) => {
       let cache = this.gridCache.get(grid);
       if (!cache) {
-        cache = {
-          list: [],
-          topIndex: 0,
-        };
-      }
-      let { topIndex, list } = cache;
-      // 更新最大zindex
-      if (zIndex > topIndex) {
-        topIndex = zIndex;
-        list.unshift(id);
+        cache = createListNode(id, zIndex);
       } else {
-        list.push(id);
+        const node = new RankNode({
+          id,
+          zIndex,
+        });
+        // 末尾插入节点
+        cache.append(node);
       }
 
-      // 更新缓存
-      this.gridCache.set(grid, { topIndex, list });
+      this.gridCache.set(grid, cache);
 
       if (SHOW_SHAPE_GRID) {
         // debug

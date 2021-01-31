@@ -2,21 +2,21 @@
  * @Author: yorshka
  * @Date: 2021-01-29 10:25:35
  * @Last Modified by: yorshka
- * @Last Modified time: 2021-01-31 13:28:23
+ * @Last Modified time: 2021-01-31 19:24:48
  *
  * canvas demo.
  *
  */
 
 import { Canvas } from '@src/canvas';
-import { SHOW_HIGHLIGHT, SHOW_MESH } from '@src/config';
+import { GRID_SIZE, SHOW_HIGHLIGHT, SHOW_MESH } from '@src/config';
 import { EventBus, EventTypes, Namespace } from '@src/eventBus';
 import { Highlight } from '@src/highlight';
 import { Interaction } from '@src/interaction';
 import { Mesh } from '@src/mesh';
+import { RankNode } from '@src/mesh/interface';
 import { CoverArea, Shape } from '@src/shape';
 import { DemoOptions } from './interface';
-import { getNextColor } from './utils';
 
 export default class Demo {
   // 容器及实例
@@ -26,7 +26,7 @@ export default class Demo {
   private height: number;
 
   // 粗粒化格子大小
-  private gridSize = 20;
+  private gridSize = GRID_SIZE;
 
   // 交互控制句柄，可取消监听器
   private interactionHandler: Interaction;
@@ -122,33 +122,39 @@ export default class Demo {
   // 点击元素
   private clickHandler = (shape: Shape) => {
     console.log('click', shape);
-    const { fillColor, meshGridList } = shape;
-    // 更新颜色
-    shape.setColor(getNextColor(fillColor));
-    // 更新位置
-    shape.levelUp();
-
     // 1. 局部擦除
-    // 2. 按照zindex重绘被擦除的元素
+    this.clearGrid(shape.coverArea);
 
+    // 2. 按照zindex重绘被擦除的元素
+    // 更新颜色
+    shape.colorLevelUp();
+
+    const { meshGridList } = shape;
     // 建立局部刷新区域
     // 待重绘shape
-    let reRenderShape: string[] = [];
+    let reRenderShape: RankNode[] = [];
     // 记录待重绘元素
     meshGridList.forEach((grid) => {
       const cache = this.meshLayer.gridCache.get(grid);
       if (cache) {
-        reRenderShape = [...reRenderShape, ...cache.list];
+        reRenderShape = [...reRenderShape, cache];
       }
     });
 
-    console.log('clearArea', shape.coverArea);
-    reRenderShape = [...new Set([...reRenderShape])];
     console.log('reRenderShape', reRenderShape);
-    // 擦除
-    this.clearGrid(shape.coverArea);
+    let shapeIdList: string[] = [];
+    reRenderShape.forEach((list: RankNode) => {
+      const head = list.prev;
+      let curr = head.next;
+      while (curr) {
+        shapeIdList.push(curr.id);
+        curr = curr.next;
+      }
+    });
+
+    shapeIdList = [...new Set([])];
     // 重绘
-    this.reRender(reRenderShape, shape);
+    this.reRender(shapeIdList, shape);
   };
 
   // 局部擦除

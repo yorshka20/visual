@@ -1,5 +1,5 @@
 // mesh格子大小
-// export const GRIDSIZE = 25;
+export const GRID_SIZE = 25;
 
 // 是否渲染网格
 export const SHOW_MESH = true;
@@ -8,7 +8,7 @@ export const SHOW_MESH = true;
 export const SHOW_MESH_POINT = true;
 
 // 是否渲染shape cover的grid
-export const SHOW_SHAPE_GRID = true;
+export const SHOW_SHAPE_GRID = false;
 
 // 是否渲染高亮框
 export const SHOW_HIGHLIGHT = true;

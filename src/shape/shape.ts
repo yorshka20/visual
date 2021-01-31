@@ -2,7 +2,7 @@
  * @Author: yorshka
  * @Date: 2021-01-29 23:04:21
  * @Last Modified by: yorshka
- * @Last Modified time: 2021-01-31 13:28:16
+ * @Last Modified time: 2021-01-31 18:01:39
  *
  * shape类型，用来储存需要被绘制的数据
  */
@@ -11,6 +11,8 @@ import { EventBus, EventTypes, Namespace } from '@src/eventBus';
 import { Mesh } from '@src/mesh';
 import { getCoverArea, getCoveredGrid } from './utils';
 import { ShapeOptions, CoverArea } from './interface';
+import { getNextColor } from '@src/demo/utils';
+
 export default class Shape {
   // 唯一id
   id: string;
@@ -83,12 +85,10 @@ export default class Shape {
     }, 0);
   }
 
-  public setColor(color: string): void {
+  // 更新颜色
+  public colorLevelUp(): void {
+    const color = getNextColor(this.fillColor);
     this.fillColor = color;
-  }
-
-  public levelUp(): void {
-    this.zIndex += 1;
   }
 
   // 自身渲染

@@ -2,11 +2,11 @@
  * @Author: yorshka
  * @Date: 2021-01-30 13:13:02
  * @Last Modified by: yorshka
- * @Last Modified time: 2021-01-31 14:56:49
+ * @Last Modified time: 2021-01-31 22:56:44
  */
 
 import { Shape } from '@src/shape';
-import { BoundingBox } from './interface';
+import { BoundingBox, RankNode } from './interface';
 
 // 返回一个矩形
 export function computeBoundingBox(shape: Shape): BoundingBox {
@@ -26,4 +26,23 @@ export function getDistance(
   y2: number
 ): number {
   return Math.sqrt(Math.pow(x1 - x2, 2) + Math.pow(y1 - y2, 2));
+}
+
+// 生成链表表头
+export function createListNode(id: string, zIndex: number): RankNode {
+  const node = new RankNode({
+    id,
+    zIndex,
+  });
+
+  node.prev = new RankNode({
+    id: '$RANK_HEAD',
+    zIndex: -1,
+  });
+
+  node.prev.next = node;
+
+  const pointer = node;
+
+  return pointer;
 }
