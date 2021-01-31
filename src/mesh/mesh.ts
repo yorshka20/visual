@@ -2,7 +2,7 @@
  * @Author: yorshka
  * @Date: 2021-01-29 22:34:19
  * @Last Modified by: yorshka
- * @Last Modified time: 2021-01-31 13:21:15
+ * @Last Modified time: 2021-01-31 16:08:25
  *
  * mesh实例，用来作为网格坐标层
  */
@@ -13,6 +13,7 @@ import { EventBus, EventTypes, Namespace } from '@src/eventBus';
 import { Shape } from '@src/shape';
 import { getMeshGrid } from '@src/shape/utils';
 import { MeshOptions, GridCacheList, Point } from './interface';
+import { getDistance } from './utils';
 
 export default class Mesh extends Canvas {
   static instance: Mesh;
@@ -94,8 +95,32 @@ export default class Mesh extends Canvas {
     const cache = this.gridCache.get(grid);
     if (cache) {
       if (cache?.list?.length) {
-        const shape = this.shapeBucket.get(cache.list[0]);
-        EventBus.namespace(Namespace.INTERACTION).emit(EventTypes.CLICK, shape);
+        // 此处可精细化处理：
+        // 1. 缩小搜索范围，将list中shape重新按照zindex排序
+        const shapeList = cache.list.map((i) => this.shapeBucket.get(i));
+        shapeList.sort((a, b) => b.zIndex - a.zIndex);
+
+        // 2. 精确计算被点击元素
+        const len = shapeList.length;
+        let target = shapeList[0];
+        for (let i = 0; i < len; i++) {
+          const shape = shapeList[i];
+          const radius = getDistance(point.x, point.y, shape.x, shape.y);
+          if (radius <= shape.radius) {
+            target = shape;
+            break;
+          }
+        }
+
+        target.zIndex = shapeList[0].zIndex + 1;
+
+        // 直接修改，不好吗？
+        this.gridCache.get(grid).list = shapeList.map((i) => i.id);
+
+        EventBus.namespace(Namespace.INTERACTION).emit(
+          EventTypes.CLICK,
+          target
+        );
         return;
       }
     }
@@ -138,6 +163,7 @@ export default class Mesh extends Canvas {
   }
 
   // 格点缓存
+  // 此处并未实现真实的zindex倒序排列，因此最终效果有偏差
   private updateGridCache(shape: Shape): void {
     const { id, meshGridList, zIndex } = shape;
     meshGridList.forEach((grid) => {

@@ -227,7 +227,7 @@ var bus = new EventBus();
  * @Author: yorshka
  * @Date: 2021-01-29 22:35:02
  * @Last Modified by: yorshka
- * @Last Modified time: 2021-01-30 18:56:51
+ * @Last Modified time: 2021-01-31 16:07:55
  */
 // 包围盒
 var BoundingBox = /** @class */ (function () {
@@ -245,7 +245,7 @@ var BoundingBox = /** @class */ (function () {
  * @Author: yorshka
  * @Date: 2021-01-30 13:13:02
  * @Last Modified by: yorshka
- * @Last Modified time: 2021-01-30 19:43:52
+ * @Last Modified time: 2021-01-31 14:56:49
  */
 // 返回一个矩形
 function computeBoundingBox(shape) {
@@ -255,6 +255,10 @@ function computeBoundingBox(shape) {
         width: 2 * shape.radius,
         height: 2 * shape.radius,
     });
+}
+// 两点之间距离
+function getDistance(x1, y1, x2, y2) {
+    return Math.sqrt(Math.pow(x1 - x2, 2) + Math.pow(y1 - y2, 2));
 }
 
 /*
@@ -962,7 +966,7 @@ function getCoverArea(x, y, radius, gridSize) {
  * @Author: yorshka
  * @Date: 2021-01-29 22:34:19
  * @Last Modified by: yorshka
- * @Last Modified time: 2021-01-31 13:21:15
+ * @Last Modified time: 2021-01-31 16:08:25
  *
  * mesh实例，用来作为网格坐标层
  */
@@ -992,8 +996,25 @@ var Mesh = /** @class */ (function (_super) {
             var cache = _this.gridCache.get(grid);
             if (cache) {
                 if ((_a = cache === null || cache === void 0 ? void 0 : cache.list) === null || _a === void 0 ? void 0 : _a.length) {
-                    var shape = _this.shapeBucket.get(cache.list[0]);
-                    bus.namespace(Namespace.INTERACTION).emit(EventTypes.CLICK, shape);
+                    // 此处可精细化处理：
+                    // 1. 缩小搜索范围，将list中shape重新按照zindex排序
+                    var shapeList = cache.list.map(function (i) { return _this.shapeBucket.get(i); });
+                    shapeList.sort(function (a, b) { return b.zIndex - a.zIndex; });
+                    // 2. 精确计算被点击元素
+                    var len = shapeList.length;
+                    var target = shapeList[0];
+                    for (var i = 0; i < len; i++) {
+                        var shape = shapeList[i];
+                        var radius = getDistance(point.x, point.y, shape.x, shape.y);
+                        if (radius <= shape.radius) {
+                            target = shape;
+                            break;
+                        }
+                    }
+                    target.zIndex = shapeList[0].zIndex + 1;
+                    // 直接修改，不好吗？
+                    _this.gridCache.get(grid).list = shapeList.map(function (i) { return i.id; });
+                    bus.namespace(Namespace.INTERACTION).emit(EventTypes.CLICK, target);
                     return;
                 }
             }
@@ -1055,6 +1076,7 @@ var Mesh = /** @class */ (function (_super) {
         });
     };
     // 格点缓存
+    // 此处并未实现真实的zindex倒序排列，因此最终效果有偏差
     Mesh.prototype.updateGridCache = function (shape) {
         var _this = this;
         var id = shape.id, meshGridList = shape.meshGridList, zIndex = shape.zIndex;
@@ -1220,7 +1242,7 @@ function getNextColor(color) {
  * @Author: yorshka
  * @Date: 2021-01-29 10:25:35
  * @Last Modified by: yorshka
- * @Last Modified time: 2021-01-31 13:28:23
+ * @Last Modified time: 2021-01-31 14:47:59
  *
  * canvas demo.
  *
