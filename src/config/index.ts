@@ -1,8 +1,8 @@
 // mesh格子大小
-export const GRIDSIZE = 20;
+export const GRIDSIZE = 10;
 
 // 是否渲染网格
-export const SHOW_MESH = true;
+export const SHOW_MESH = false;
 
 // 是否渲染格点
 export const SHOW_MESH_POINT = false;

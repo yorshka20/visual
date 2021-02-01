@@ -96,7 +96,7 @@ var Canvas = /** @class */ (function () {
 }());
 
 // mesh格子大小
-var GRIDSIZE = 20;
+var GRIDSIZE = 10;
 // 点击变色色列
 var COLOR_SET = ['#FF0000', '#EE0000', '#CD0000', '#8B0000'];
 
@@ -1305,10 +1305,6 @@ var Demo = /** @class */ (function () {
             // hide: true,
             gridSize: this.gridSize,
         });
-        // 渲染网格背景
-        {
-            this.meshLayer.renderGrid();
-        }
         // 交互handler
         this.interactionHandler = new Interaction({
             target: this.interactionLayer,
@@ -1392,7 +1388,7 @@ var demo = new Demo({
 });
 window.demo = demo;
 // 生成图形
-var shapeList = demo.generateShape(100);
+var shapeList = demo.generateShape(200);
 // 渲染图像
 var ctx = demo.getCtx();
 shapeList.forEach(function (shape) {
