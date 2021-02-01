@@ -1100,10 +1100,6 @@ var Mesh = /** @class */ (function (_super) {
             }
             // 更新缓存
             _this.gridCache.set(grid, { topIndex: topIndex, list: list });
-            {
-                // debug
-                _this.fillGrid(grid);
-            }
         });
     };
     // 辅助方法：渲染格子
