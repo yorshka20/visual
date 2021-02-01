@@ -96,6 +96,7 @@ var Canvas = /** @class */ (function () {
 }());
 
 // mesh格子大小
+var GRIDSIZE = 20;
 // 点击变色色列
 var COLOR_SET = ['#FF0000', '#EE0000', '#CD0000', '#8B0000'];
 
@@ -227,7 +228,7 @@ var bus = new EventBus();
  * @Author: yorshka
  * @Date: 2021-01-29 22:35:02
  * @Last Modified by: yorshka
- * @Last Modified time: 2021-01-31 16:07:55
+ * @Last Modified time: 2021-01-30 18:56:51
  */
 // 包围盒
 var BoundingBox = /** @class */ (function () {
@@ -269,7 +270,7 @@ function getDistance(x1, y1, x2, y2) {
  *
  * 高亮层，绘制鼠标感知状态
  */
-var Highlight = /** @class */ (function (_super) {
+/** @class */ ((function (_super) {
     __extends(Highlight, _super);
     function Highlight(options) {
         var _this = _super.call(this, options) || this;
@@ -320,7 +321,7 @@ var Highlight = /** @class */ (function (_super) {
         this.ctx.clearRect(0, 0, this.width, this.height);
     };
     return Highlight;
-}(Canvas));
+}(Canvas)));
 
 /**
  * Checks if `value` is the
@@ -1099,10 +1100,6 @@ var Mesh = /** @class */ (function (_super) {
             }
             // 更新缓存
             _this.gridCache.set(grid, { topIndex: topIndex, list: list });
-            {
-                // debug
-                _this.fillGrid(grid);
-            }
         });
     };
     // 辅助方法：渲染格子
@@ -1242,7 +1239,7 @@ function getNextColor(color) {
  * @Author: yorshka
  * @Date: 2021-01-29 10:25:35
  * @Last Modified by: yorshka
- * @Last Modified time: 2021-01-31 14:47:59
+ * @Last Modified time: 2021-02-01 11:33:30
  *
  * canvas demo.
  *
@@ -1251,7 +1248,7 @@ var Demo = /** @class */ (function () {
     function Demo(options) {
         var _this = this;
         // 粗粒化格子大小
-        this.gridSize = 20;
+        this.gridSize = GRIDSIZE;
         // 缓存层
         this.cacheLayer = null;
         // 点击元素
@@ -1294,14 +1291,6 @@ var Demo = /** @class */ (function () {
             container: container,
             zIndex: 4,
         });
-        // cache层，快速擦除，内容较少
-        {
-            this.cacheLayer = new Highlight({
-                id: 'cache',
-                container: container,
-                zIndex: 3,
-            });
-        }
         // 主画布
         this.displayLayer = new Canvas({
             id: 'main',

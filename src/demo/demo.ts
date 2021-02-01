@@ -2,14 +2,14 @@
  * @Author: yorshka
  * @Date: 2021-01-29 10:25:35
  * @Last Modified by: yorshka
- * @Last Modified time: 2021-01-31 13:28:23
+ * @Last Modified time: 2021-02-01 11:33:30
  *
  * canvas demo.
  *
  */
 
 import { Canvas } from '@src/canvas';
-import { SHOW_HIGHLIGHT, SHOW_MESH } from '@src/config';
+import { GRIDSIZE, SHOW_HIGHLIGHT, SHOW_MESH } from '@src/config';
 import { EventBus, EventTypes, Namespace } from '@src/eventBus';
 import { Highlight } from '@src/highlight';
 import { Interaction } from '@src/interaction';
@@ -26,7 +26,7 @@ export default class Demo {
   private height: number;
 
   // 粗粒化格子大小
-  private gridSize = 20;
+  private gridSize = GRIDSIZE;
 
   // 交互控制句柄，可取消监听器
   private interactionHandler: Interaction;
