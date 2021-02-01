@@ -8,7 +8,7 @@
  */
 
 import { Canvas } from '@src/canvas';
-import { SHOW_SHAPE_GRID } from '@src/config';
+import { SHOW_MESH_POINT, SHOW_SHAPE_GRID } from '@src/config';
 import { EventBus, EventTypes, Namespace } from '@src/eventBus';
 import { Shape } from '@src/shape';
 import { getMeshGrid } from '@src/shape/utils';
@@ -237,19 +237,21 @@ export default class Mesh extends Canvas {
     const xOffset = 0;
     const yOffset = 0;
 
-    // 画格线交点
-    for (let x = xStart - gridSize; x <= xEnd; x += gridSize) {
-      for (let y = yStart - gridSize; y <= yEnd; y += gridSize) {
-        if (
-          Math.abs(x + xOffset) % 100 == 0 &&
-          Math.abs(y + yOffset) % 100 == 0
-        ) {
-          ctx.strokeStyle = '#000';
-          ctx.strokeText(
-            `(${(x + xOffset) / gridSize},${(y + yOffset) / gridSize})`,
-            x + 1,
-            y - 1
-          );
+    if (SHOW_MESH_POINT) {
+      // 画格线交点
+      for (let x = xStart - gridSize; x <= xEnd; x += gridSize) {
+        for (let y = yStart - gridSize; y <= yEnd; y += gridSize) {
+          if (
+            Math.abs(x + xOffset) % 100 == 0 &&
+            Math.abs(y + yOffset) % 100 == 0
+          ) {
+            ctx.strokeStyle = '#000';
+            ctx.strokeText(
+              `(${(x + xOffset) / gridSize},${(y + yOffset) / gridSize})`,
+              x + 1,
+              y - 1
+            );
+          }
         }
       }
     }

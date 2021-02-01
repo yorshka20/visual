@@ -17,7 +17,7 @@ const demo = new Demo({
 window.demo = demo;
 
 // 生成图形
-const shapeList = demo.generateShape(200);
+const shapeList = demo.generateShape(120);
 
 // 渲染图像
 const ctx = demo.getCtx();

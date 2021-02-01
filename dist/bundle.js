@@ -270,7 +270,7 @@ function getDistance(x1, y1, x2, y2) {
  *
  * 高亮层，绘制鼠标感知状态
  */
-/** @class */ ((function (_super) {
+var Highlight = /** @class */ (function (_super) {
     __extends(Highlight, _super);
     function Highlight(options) {
         var _this = _super.call(this, options) || this;
@@ -321,7 +321,7 @@ function getDistance(x1, y1, x2, y2) {
         this.ctx.clearRect(0, 0, this.width, this.height);
     };
     return Highlight;
-}(Canvas)));
+}(Canvas));
 
 /**
  * Checks if `value` is the
@@ -1100,6 +1100,10 @@ var Mesh = /** @class */ (function (_super) {
             }
             // 更新缓存
             _this.gridCache.set(grid, { topIndex: topIndex, list: list });
+            {
+                // debug
+                _this.fillGrid(grid);
+            }
         });
     };
     // 辅助方法：渲染格子
@@ -1131,18 +1135,7 @@ var Mesh = /** @class */ (function (_super) {
             ctx.moveTo(xStart - gridSize, y);
             ctx.lineTo(xEnd + gridSize, y);
         }
-        var xOffset = 0;
-        var yOffset = 0;
-        // 画格线交点
-        for (var x = xStart - gridSize; x <= xEnd; x += gridSize) {
-            for (var y = yStart - gridSize; y <= yEnd; y += gridSize) {
-                if (Math.abs(x + xOffset) % 100 == 0 &&
-                    Math.abs(y + yOffset) % 100 == 0) {
-                    ctx.strokeStyle = '#000';
-                    ctx.strokeText("(" + (x + xOffset) / gridSize + "," + (y + yOffset) / gridSize + ")", x + 1, y - 1);
-                }
-            }
-        }
+        var x, y; 
         ctx.closePath();
         ctx.stroke();
     };
@@ -1291,6 +1284,14 @@ var Demo = /** @class */ (function () {
             container: container,
             zIndex: 4,
         });
+        // cache层，快速擦除，内容较少
+        {
+            this.cacheLayer = new Highlight({
+                id: 'cache',
+                container: container,
+                zIndex: 3,
+            });
+        }
         // 主画布
         this.displayLayer = new Canvas({
             id: 'main',
@@ -1305,6 +1306,10 @@ var Demo = /** @class */ (function () {
             // hide: true,
             gridSize: this.gridSize,
         });
+        // 渲染网格背景
+        {
+            this.meshLayer.renderGrid();
+        }
         // 交互handler
         this.interactionHandler = new Interaction({
             target: this.interactionLayer,
@@ -1388,7 +1393,7 @@ var demo = new Demo({
 });
 window.demo = demo;
 // 生成图形
-var shapeList = demo.generateShape(200);
+var shapeList = demo.generateShape(120);
 // 渲染图像
 var ctx = demo.getCtx();
 shapeList.forEach(function (shape) {
