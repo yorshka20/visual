@@ -1,57 +1,5 @@
-'use strict';
 
-/*! *****************************************************************************
-Copyright (c) Microsoft Corporation.
-
-Permission to use, copy, modify, and/or distribute this software for any
-purpose with or without fee is hereby granted.
-
-THE SOFTWARE IS PROVIDED "AS IS" AND THE AUTHOR DISCLAIMS ALL WARRANTIES WITH
-REGARD TO THIS SOFTWARE INCLUDING ALL IMPLIED WARRANTIES OF MERCHANTABILITY
-AND FITNESS. IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR ANY SPECIAL, DIRECT,
-INDIRECT, OR CONSEQUENTIAL DAMAGES OR ANY DAMAGES WHATSOEVER RESULTING FROM
-LOSS OF USE, DATA OR PROFITS, WHETHER IN AN ACTION OF CONTRACT, NEGLIGENCE OR
-OTHER TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR
-PERFORMANCE OF THIS SOFTWARE.
-***************************************************************************** */
-/* global Reflect, Promise */
-
-var extendStatics = function(d, b) {
-    extendStatics = Object.setPrototypeOf ||
-        ({ __proto__: [] } instanceof Array && function (d, b) { d.__proto__ = b; }) ||
-        function (d, b) { for (var p in b) if (Object.prototype.hasOwnProperty.call(b, p)) d[p] = b[p]; };
-    return extendStatics(d, b);
-};
-
-function __extends(d, b) {
-    extendStatics(d, b);
-    function __() { this.constructor = d; }
-    d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
-}
-
-function __read(o, n) {
-    var m = typeof Symbol === "function" && o[Symbol.iterator];
-    if (!m) return o;
-    var i = m.call(o), r, ar = [], e;
-    try {
-        while ((n === void 0 || n-- > 0) && !(r = i.next()).done) ar.push(r.value);
-    }
-    catch (error) { e = { error: error }; }
-    finally {
-        try {
-            if (r && !r.done && (m = i["return"])) m.call(i);
-        }
-        finally { if (e) throw e.error; }
-    }
-    return ar;
-}
-
-function __spread() {
-    for (var ar = [], i = 0; i < arguments.length; i++)
-        ar = ar.concat(__read(arguments[i]));
-    return ar;
-}
-
+(function(l, r) { if (!l || l.getElementById('livereloadscript')) return; r = l.createElement('script'); r.async = 1; r.src = '//' + (self.location.host || 'localhost').split(':')[0] + ':35729/livereload.js?snipver=1'; r.id = 'livereloadscript'; l.getElementsByTagName('head')[0].appendChild(r) })(self.document);
 /*
  * @Author: yorshka
  * @Date: 2021-01-29 22:43:14
@@ -60,13 +8,22 @@ function __spread() {
  *
  * 自定义canvas类型，大小与容器一致
  */
-var Canvas = /** @class */ (function () {
-    function Canvas(options) {
-        var container = options.container, zIndex = options.zIndex, hide = options.hide, id = options.id;
+class Canvas {
+    // 挂载容器
+    container;
+    // DOM canvas元素实例(对外暴露)
+    canvasEle;
+    // 2d context
+    ctx;
+    // 宽高
+    width;
+    height;
+    constructor(options) {
+        const { container, zIndex, hide, id } = options;
         //   保存canvas挂载容器
         this.container = container;
         //   创建canvas元素
-        var canvas = document.createElement('canvas');
+        const canvas = document.createElement('canvas');
         canvas.width = container.clientWidth;
         canvas.height = container.clientHeight;
         this.width = container.clientWidth;
@@ -92,13 +49,12 @@ var Canvas = /** @class */ (function () {
             this.container.appendChild(canvas);
         }
     }
-    return Canvas;
-}());
+}
 
 // mesh格子大小
-var GRIDSIZE = 10;
+const GRIDSIZE = 10;
 // 点击变色色列
-var COLOR_SET = ['#FF0000', '#EE0000', '#CD0000', '#8B0000'];
+const COLOR_SET = ['#FF0000', '#EE0000', '#CD0000', '#8B0000'];
 
 /*
  * @Author: yorshka
@@ -109,42 +65,17 @@ var COLOR_SET = ['#FF0000', '#EE0000', '#CD0000', '#8B0000'];
  * EventBus 工具类
  * 需要从全局作用域iife重构为class，否则会导致无法追踪的匿名监听器残留
  */
-var EventBus = /** @class */ (function () {
-    function EventBus() {
-        // 监听一个事件
-        this.on = function (name, key, fn) {
-            var _a;
-            var namespace = (_a = this.namespaceCache) === null || _a === void 0 ? void 0 : _a.get(name);
-            if (!namespace) {
-                return;
-            }
-            var cache = namespace.eventBucket;
-            if (!cache[key]) {
-                cache[key] = [];
-            }
-            cache[key].push(fn);
-        };
-        // 移除一个事件。如果fn为空，则清空该事件下的所有事件
-        this.remove = function (name, key, fn) {
-            var _a;
-            var namespace = (_a = this.namespaceCache) === null || _a === void 0 ? void 0 : _a.get(name);
-            if (!namespace) {
-                return;
-            }
-            var cache = namespace.eventBucket;
-            if (cache[key]) {
-                if (fn) {
-                    for (var i = cache[key].length; i >= 0; i--) {
-                        if (cache[key][i] === fn) {
-                            cache[key].splice(i, 1);
-                        }
-                    }
-                }
-                else {
-                    cache[key] = [];
-                }
-            }
-        };
+class EventBus {
+    static _instance;
+    static get instance() {
+        if (!this._instance) {
+            this._instance = new EventBus();
+        }
+        return this._instance;
+    }
+    defaultNamespace;
+    namespaceCache;
+    constructor() {
         if (EventBus._instance) {
             return EventBus._instance;
         }
@@ -152,55 +83,69 @@ var EventBus = /** @class */ (function () {
         this.namespaceCache = new Map();
         EventBus._instance = this;
     }
-    Object.defineProperty(EventBus, "instance", {
-        get: function () {
-            if (!this._instance) {
-                this._instance = new EventBus();
-            }
-            return this._instance;
-        },
-        enumerable: false,
-        configurable: true
-    });
-    EventBus.prototype.clean = function () {
+    clean() {
         this.namespaceCache = null;
         EventBus._instance = null;
-    };
-    EventBus.prototype.namespace = function (inputName) {
-        var _this = this;
-        var _a;
-        var name = inputName || this.defaultNamespace; // 命名空间
-        if ((_a = this.namespaceCache) === null || _a === void 0 ? void 0 : _a.get(name)) {
+    }
+    namespace(inputName) {
+        const name = inputName || this.defaultNamespace; // 命名空间
+        if (this.namespaceCache?.get(name)) {
             return this.namespaceCache.get(name);
         }
-        var namespace = {
-            on: function (key, fn) {
-                _this.on(name, key, fn);
+        const namespace = {
+            on: (key, fn) => {
+                this.on(name, key, fn);
             },
-            remove: function (key, fn) {
-                _this.remove(name, key, fn);
+            remove: (key, fn) => {
+                this.remove(name, key, fn);
             },
-            emit: function () {
-                var _a;
-                var args = [];
-                for (var _i = 0; _i < arguments.length; _i++) {
-                    args[_i] = arguments[_i];
-                }
-                var _b = __read(args, 2), event = _b[0], params = _b[1];
-                var eventHandlers = (_a = this.eventBucket) === null || _a === void 0 ? void 0 : _a[event];
-                if (eventHandlers === null || eventHandlers === void 0 ? void 0 : eventHandlers.length) {
-                    eventHandlers.forEach(function (handler) {
+            emit(...args) {
+                const [event, params] = args;
+                const eventHandlers = this.eventBucket?.[event];
+                if (eventHandlers?.length) {
+                    eventHandlers.forEach((handler) => {
                         handler(params);
                     });
                 }
             },
-            eventBucket: {},
+            eventBucket: {}, // 闭包中的事件缓存
         };
         this.namespaceCache.set(name, namespace);
         return namespace;
+    }
+    // 监听一个事件
+    on = function (name, key, fn) {
+        const namespace = this.namespaceCache?.get(name);
+        if (!namespace) {
+            return;
+        }
+        const cache = namespace.eventBucket;
+        if (!cache[key]) {
+            cache[key] = [];
+        }
+        cache[key].push(fn);
     };
-    return EventBus;
-}());
+    // 移除一个事件。如果fn为空，则清空该事件下的所有事件
+    remove = function (name, key, fn) {
+        const namespace = this.namespaceCache?.get(name);
+        if (!namespace) {
+            return;
+        }
+        const cache = namespace.eventBucket;
+        if (cache[key]) {
+            if (fn) {
+                for (let i = cache[key].length; i >= 0; i--) {
+                    if (cache[key][i] === fn) {
+                        cache[key].splice(i, 1);
+                    }
+                }
+            }
+            else {
+                cache[key] = [];
+            }
+        }
+    };
+}
 
 /**
  * 消息类型
@@ -222,7 +167,7 @@ var Namespace;
     Namespace["INIT"] = "init";
 })(Namespace || (Namespace = {}));
 
-var bus = new EventBus();
+const bus = new EventBus();
 
 /*
  * @Author: yorshka
@@ -231,16 +176,19 @@ var bus = new EventBus();
  * @Last Modified time: 2021-01-30 18:56:51
  */
 // 包围盒
-var BoundingBox = /** @class */ (function () {
-    function BoundingBox(data) {
-        var x = data.x, y = data.y, width = data.width, height = data.height;
+class BoundingBox {
+    x;
+    y;
+    width;
+    height;
+    constructor(data) {
+        const { x, y, width, height } = data;
         this.x = x;
         this.y = y;
         this.width = width;
         this.height = height;
     }
-    return BoundingBox;
-}());
+}
 
 /*
  * @Author: yorshka
@@ -270,58 +218,51 @@ function getDistance(x1, y1, x2, y2) {
  *
  * 高亮层，绘制鼠标感知状态
  */
-var Highlight = /** @class */ (function (_super) {
-    __extends(Highlight, _super);
-    function Highlight(options) {
-        var _this = _super.call(this, options) || this;
-        _this.hoverHandler = function (shape) {
-            _this.hoverTarget = shape;
-        };
-        //   设置高亮stroke颜色
-        _this.ctx.strokeStyle = '#00FF00';
-        _this._target = null;
-        //   初始化监听器
-        _this.init();
-        return _this;
+class Highlight extends Canvas {
+    _target; // hover shape id
+    get hoverTarget() {
+        return this._target;
     }
-    Object.defineProperty(Highlight.prototype, "hoverTarget", {
-        get: function () {
-            return this._target;
-        },
-        set: function (val) {
-            var _a;
-            if (!val) {
-                this.clean();
-                return;
-            }
-            if (val.id !== ((_a = this._target) === null || _a === void 0 ? void 0 : _a.id) || !this._target) {
-                this._target = val;
-                this.clean();
-                this.drawHighlight(val);
-            }
-        },
-        enumerable: false,
-        configurable: true
-    });
-    Highlight.prototype.destroy = function () {
+    set hoverTarget(val) {
+        if (!val) {
+            this.clean();
+            return;
+        }
+        if (val.id !== this._target?.id || !this._target) {
+            this._target = val;
+            this.clean();
+            this.drawHighlight(val);
+        }
+    }
+    constructor(options) {
+        super(options);
+        //   设置高亮stroke颜色
+        this.ctx.strokeStyle = '#00FF00';
+        this._target = null;
+        //   初始化监听器
+        this.init();
+    }
+    destroy() {
         this.uninit();
-    };
-    Highlight.prototype.init = function () {
+    }
+    init() {
         bus.namespace(Namespace.INTERACTION).on(EventTypes.HOVER, this.hoverHandler);
-    };
-    Highlight.prototype.uninit = function () {
+    }
+    uninit() {
         bus.namespace(Namespace.INTERACTION).remove(EventTypes.HOVER);
+    }
+    hoverHandler = (shape) => {
+        this.hoverTarget = shape;
     };
     // 绘制高亮框
-    Highlight.prototype.drawHighlight = function (shape) {
-        var rect = computeBoundingBox(shape);
+    drawHighlight(shape) {
+        const rect = computeBoundingBox(shape);
         this.ctx.strokeRect(rect.x, rect.y, rect.width, rect.height);
-    };
-    Highlight.prototype.clean = function () {
+    }
+    clean() {
         this.ctx.clearRect(0, 0, this.width, this.height);
-    };
-    return Highlight;
-}(Canvas));
+    }
+}
 
 /**
  * Checks if `value` is the
@@ -392,26 +333,64 @@ var now = function() {
 
 var now_1 = now;
 
-/** Built-in value references. */
-var Symbol$1 = _root.Symbol;
+/** Used to match a single whitespace character. */
+var reWhitespace = /\s/;
 
-var _Symbol = Symbol$1;
+/**
+ * Used by `_.trim` and `_.trimEnd` to get the index of the last non-whitespace
+ * character of `string`.
+ *
+ * @private
+ * @param {string} string The string to inspect.
+ * @returns {number} Returns the index of the last non-whitespace character.
+ */
+function trimmedEndIndex(string) {
+  var index = string.length;
+
+  while (index-- && reWhitespace.test(string.charAt(index))) {}
+  return index;
+}
+
+var _trimmedEndIndex = trimmedEndIndex;
+
+/** Used to match leading whitespace. */
+var reTrimStart = /^\s+/;
+
+/**
+ * The base implementation of `_.trim`.
+ *
+ * @private
+ * @param {string} string The string to trim.
+ * @returns {string} Returns the trimmed string.
+ */
+function baseTrim(string) {
+  return string
+    ? string.slice(0, _trimmedEndIndex(string) + 1).replace(reTrimStart, '')
+    : string;
+}
+
+var _baseTrim = baseTrim;
+
+/** Built-in value references. */
+var Symbol = _root.Symbol;
+
+var _Symbol = Symbol;
 
 /** Used for built-in method references. */
-var objectProto = Object.prototype;
+var objectProto$1 = Object.prototype;
 
 /** Used to check objects for own properties. */
-var hasOwnProperty = objectProto.hasOwnProperty;
+var hasOwnProperty = objectProto$1.hasOwnProperty;
 
 /**
  * Used to resolve the
  * [`toStringTag`](http://ecma-international.org/ecma-262/7.0/#sec-object.prototype.tostring)
  * of values.
  */
-var nativeObjectToString = objectProto.toString;
+var nativeObjectToString$1 = objectProto$1.toString;
 
 /** Built-in value references. */
-var symToStringTag = _Symbol ? _Symbol.toStringTag : undefined;
+var symToStringTag$1 = _Symbol ? _Symbol.toStringTag : undefined;
 
 /**
  * A specialized version of `baseGetTag` which ignores `Symbol.toStringTag` values.
@@ -421,20 +400,20 @@ var symToStringTag = _Symbol ? _Symbol.toStringTag : undefined;
  * @returns {string} Returns the raw `toStringTag`.
  */
 function getRawTag(value) {
-  var isOwn = hasOwnProperty.call(value, symToStringTag),
-      tag = value[symToStringTag];
+  var isOwn = hasOwnProperty.call(value, symToStringTag$1),
+      tag = value[symToStringTag$1];
 
   try {
-    value[symToStringTag] = undefined;
+    value[symToStringTag$1] = undefined;
     var unmasked = true;
   } catch (e) {}
 
-  var result = nativeObjectToString.call(value);
+  var result = nativeObjectToString$1.call(value);
   if (unmasked) {
     if (isOwn) {
-      value[symToStringTag] = tag;
+      value[symToStringTag$1] = tag;
     } else {
-      delete value[symToStringTag];
+      delete value[symToStringTag$1];
     }
   }
   return result;
@@ -443,14 +422,14 @@ function getRawTag(value) {
 var _getRawTag = getRawTag;
 
 /** Used for built-in method references. */
-var objectProto$1 = Object.prototype;
+var objectProto = Object.prototype;
 
 /**
  * Used to resolve the
  * [`toStringTag`](http://ecma-international.org/ecma-262/7.0/#sec-object.prototype.tostring)
  * of values.
  */
-var nativeObjectToString$1 = objectProto$1.toString;
+var nativeObjectToString = objectProto.toString;
 
 /**
  * Converts `value` to a string using `Object.prototype.toString`.
@@ -460,7 +439,7 @@ var nativeObjectToString$1 = objectProto$1.toString;
  * @returns {string} Returns the converted string.
  */
 function objectToString(value) {
-  return nativeObjectToString$1.call(value);
+  return nativeObjectToString.call(value);
 }
 
 var _objectToString = objectToString;
@@ -470,7 +449,7 @@ var nullTag = '[object Null]',
     undefinedTag = '[object Undefined]';
 
 /** Built-in value references. */
-var symToStringTag$1 = _Symbol ? _Symbol.toStringTag : undefined;
+var symToStringTag = _Symbol ? _Symbol.toStringTag : undefined;
 
 /**
  * The base implementation of `getTag` without fallbacks for buggy environments.
@@ -483,7 +462,7 @@ function baseGetTag(value) {
   if (value == null) {
     return value === undefined ? undefinedTag : nullTag;
   }
-  return (symToStringTag$1 && symToStringTag$1 in Object(value))
+  return (symToStringTag && symToStringTag in Object(value))
     ? _getRawTag(value)
     : _objectToString(value);
 }
@@ -550,9 +529,6 @@ var isSymbol_1 = isSymbol;
 /** Used as references for various `Number` constants. */
 var NAN = 0 / 0;
 
-/** Used to match leading and trailing whitespace. */
-var reTrim = /^\s+|\s+$/g;
-
 /** Used to detect bad signed hexadecimal string values. */
 var reIsBadHex = /^[-+]0x[0-9a-f]+$/i;
 
@@ -602,7 +578,7 @@ function toNumber(value) {
   if (typeof value != 'string') {
     return value === 0 ? value : +value;
   }
-  value = value.replace(reTrim, '');
+  value = _baseTrim(value);
   var isBinary = reIsBinary.test(value);
   return (isBinary || reIsOctal.test(value))
     ? freeParseInt(value.slice(2), isBinary ? 2 : 8)
@@ -612,7 +588,7 @@ function toNumber(value) {
 var toNumber_1 = toNumber;
 
 /** Error message constants. */
-var FUNC_ERROR_TEXT = 'Expected a function';
+var FUNC_ERROR_TEXT$1 = 'Expected a function';
 
 /* Built-in method references for those with the same name as other `lodash` methods. */
 var nativeMax = Math.max,
@@ -685,7 +661,7 @@ function debounce(func, wait, options) {
       trailing = true;
 
   if (typeof func != 'function') {
-    throw new TypeError(FUNC_ERROR_TEXT);
+    throw new TypeError(FUNC_ERROR_TEXT$1);
   }
   wait = toNumber_1(wait) || 0;
   if (isObject_1(options)) {
@@ -800,7 +776,7 @@ function debounce(func, wait, options) {
 var debounce_1 = debounce;
 
 /** Error message constants. */
-var FUNC_ERROR_TEXT$1 = 'Expected a function';
+var FUNC_ERROR_TEXT = 'Expected a function';
 
 /**
  * Creates a throttled function that only invokes `func` at most once per
@@ -851,7 +827,7 @@ function throttle(func, wait, options) {
       trailing = true;
 
   if (typeof func != 'function') {
-    throw new TypeError(FUNC_ERROR_TEXT$1);
+    throw new TypeError(FUNC_ERROR_TEXT);
   }
   if (isObject_1(options)) {
     leading = 'leading' in options ? !!options.leading : leading;
@@ -874,41 +850,40 @@ var throttle_1 = throttle;
  *
  * 交互感知层
  */
-var Interaction = /** @class */ (function () {
-    function Interaction(options) {
-        this.mouseMoveHandler = function (e) {
-            return throttle_1(function (e) {
-                var offsetX = e.offsetX, offsetY = e.offsetY;
-                // 发送事件
-                bus.namespace(Namespace.INTERACTION).emit(EventTypes.MOVE, {
-                    x: offsetX,
-                    y: offsetY,
-                });
-            }, 20)(e);
-        };
-        this.mouseDownHandler = function (e) {
-            var offsetX = e.offsetX, offsetY = e.offsetY;
-            // 发送事件
-            bus.namespace(Namespace.INTERACTION).emit(EventTypes.MOUSEDOWN, {
-                x: offsetX,
-                y: offsetY,
-            });
-        };
+class Interaction {
+    // 监听目标元素
+    target;
+    constructor(options) {
         this.target = options.target.canvasEle;
         this.init();
     }
     // 销毁
-    Interaction.prototype.destroy = function () {
+    destroy() {
         this.target.removeEventListener('mousedown', this.mouseDownHandler);
         this.target.removeEventListener('mousemove', this.mouseMoveHandler);
-    };
+    }
     // 挂载监听器
-    Interaction.prototype.init = function () {
+    init() {
         this.target.addEventListener('mousedown', this.mouseDownHandler);
         this.target.addEventListener('mousemove', this.mouseMoveHandler);
+    }
+    mouseMoveHandler = (e) => throttle_1((e) => {
+        const { offsetX, offsetY } = e;
+        // 发送事件
+        bus.namespace(Namespace.INTERACTION).emit(EventTypes.MOVE, {
+            x: offsetX,
+            y: offsetY,
+        });
+    }, 20)(e);
+    mouseDownHandler = (e) => {
+        const { offsetX, offsetY } = e;
+        // 发送事件
+        bus.namespace(Namespace.INTERACTION).emit(EventTypes.MOUSEDOWN, {
+            x: offsetX,
+            y: offsetY,
+        });
     };
-    return Interaction;
-}());
+}
 
 /*
  * @Author: yorshka
@@ -918,19 +893,19 @@ var Interaction = /** @class */ (function () {
  */
 // 获得shape cover的格子
 function getCoveredGrid(x, y, radius, gridSize) {
-    var list = [];
+    const list = [];
     // boundingBox三顶点： 左上，右上，左下
-    var lt = [x - radius < 0 ? 0 : x - radius, y - radius < 0 ? 0 : y - radius];
-    var rt = [x + radius, y - radius < 0 ? 0 : y - radius];
-    var lb = [x - radius < 0 ? 0 : x - radius, y + radius];
+    const lt = [x - radius < 0 ? 0 : x - radius, y - radius < 0 ? 0 : y - radius];
+    const rt = [x + radius, y - radius < 0 ? 0 : y - radius];
+    const lb = [x - radius < 0 ? 0 : x - radius, y + radius];
     // console.log('x,y,radius', x, y, radius);
     // console.log('lt,rt,lb', lt, rt, lb);
-    var xAxis = [Math.floor(lt[0] / gridSize), Math.floor(rt[0] / gridSize)];
-    var yAxis = [Math.floor(lt[1] / gridSize), Math.floor(lb[1] / gridSize)];
+    const xAxis = [Math.floor(lt[0] / gridSize), Math.floor(rt[0] / gridSize)];
+    const yAxis = [Math.floor(lt[1] / gridSize), Math.floor(lb[1] / gridSize)];
     // console.log('xAxis,yAxis', xAxis, yAxis);
-    for (var x_1 = xAxis[0]; x_1 <= xAxis[1]; x_1++) {
-        for (var y_1 = yAxis[0]; y_1 <= yAxis[1]; y_1++) {
-            list.push(x_1 + ":" + y_1);
+    for (let x = xAxis[0]; x <= xAxis[1]; x++) {
+        for (let y = yAxis[0]; y <= yAxis[1]; y++) {
+            list.push(`${x}:${y}`);
         }
     }
     // console.log('list', list);
@@ -938,24 +913,24 @@ function getCoveredGrid(x, y, radius, gridSize) {
 }
 // 获取point在mesh中最近的grid位置
 function getMeshGrid(x, y, gridSize) {
-    var gx = Math.floor(x / gridSize);
-    var gy = Math.floor(y / gridSize);
+    const gx = Math.floor(x / gridSize);
+    const gy = Math.floor(y / gridSize);
     return [gx, gy];
 }
 // 计算cover区域
 function getCoverArea(x, y, radius, gridSize) {
-    var area = {
+    const area = {
         x: 0,
         y: 0,
         width: 0,
         height: 0,
     };
     // boundingBox三顶点： 左上，右上，左下
-    var lt = [x - radius < 0 ? 0 : x - radius, y - radius < 0 ? 0 : y - radius];
-    var rt = [x + radius, y - radius < 0 ? 0 : y - radius];
-    var lb = [x - radius < 0 ? 0 : x - radius, y + radius];
-    var xAxis = [Math.floor(lt[0] / gridSize), Math.floor(rt[0] / gridSize)];
-    var yAxis = [Math.floor(lt[1] / gridSize), Math.floor(lb[1] / gridSize)];
+    const lt = [x - radius < 0 ? 0 : x - radius, y - radius < 0 ? 0 : y - radius];
+    const rt = [x + radius, y - radius < 0 ? 0 : y - radius];
+    const lb = [x - radius < 0 ? 0 : x - radius, y + radius];
+    const xAxis = [Math.floor(lt[0] / gridSize), Math.floor(rt[0] / gridSize)];
+    const yAxis = [Math.floor(lt[1] / gridSize), Math.floor(lb[1] / gridSize)];
     area.x = xAxis[0] * gridSize;
     area.y = yAxis[0] * gridSize;
     area.width = xAxis[1] * gridSize + gridSize - area.x;
@@ -971,125 +946,126 @@ function getCoverArea(x, y, radius, gridSize) {
  *
  * mesh实例，用来作为网格坐标层
  */
-var Mesh = /** @class */ (function (_super) {
-    __extends(Mesh, _super);
-    function Mesh(options) {
-        var _this = _super.call(this, options) || this;
-        // 监听鼠标移动，计算当前hover shape
-        _this.handleMouseMove = function (point) {
-            var _a;
-            var grid = getMeshGrid(point.x, point.y, _this.gridSize).join(':');
-            var cache = _this.gridCache.get(grid);
-            if (cache) {
-                if ((_a = cache === null || cache === void 0 ? void 0 : cache.list) === null || _a === void 0 ? void 0 : _a.length) {
-                    var shape = _this.shapeBucket.get(cache.list[0]);
-                    bus.namespace(Namespace.INTERACTION).emit(EventTypes.HOVER, shape);
-                    return;
-                }
-            }
-            bus.namespace(Namespace.INTERACTION).emit(EventTypes.HOVER, null);
-        };
-        // 鼠标点击
-        _this.handleMouseDown = function (point) {
-            var _a;
-            var grid = getMeshGrid(point.x, point.y, _this.gridSize).join(':');
-            // console.log('grid', grid);
-            var cache = _this.gridCache.get(grid);
-            if (cache) {
-                if ((_a = cache === null || cache === void 0 ? void 0 : cache.list) === null || _a === void 0 ? void 0 : _a.length) {
-                    // 此处可精细化处理：
-                    // 1. 缩小搜索范围，将list中shape重新按照zindex排序
-                    var shapeList = cache.list.map(function (i) { return _this.shapeBucket.get(i); });
-                    shapeList.sort(function (a, b) { return b.zIndex - a.zIndex; });
-                    // 2. 精确计算被点击元素
-                    var len = shapeList.length;
-                    var target = shapeList[0];
-                    for (var i = 0; i < len; i++) {
-                        var shape = shapeList[i];
-                        var radius = getDistance(point.x, point.y, shape.x, shape.y);
-                        if (radius <= shape.radius) {
-                            target = shape;
-                            break;
-                        }
-                    }
-                    target.zIndex = shapeList[0].zIndex + 1;
-                    // 直接修改，不好吗？
-                    _this.gridCache.get(grid).list = shapeList.map(function (i) { return i.id; });
-                    bus.namespace(Namespace.INTERACTION).emit(EventTypes.CLICK, target);
-                    return;
-                }
-            }
-        };
-        _this.handleShapeReady = function (shape) {
-            console.log('shape ready', shape);
-            _this.recordShape(shape);
-        };
+class Mesh extends Canvas {
+    static instance;
+    // 缓冲数据集
+    shapeBucket;
+    // 格点缓存，以gridId为key，记录cover该grid的shape的list，shape按zindex倒序排
+    gridCache;
+    // mesh网格格子大小
+    gridSize;
+    constructor(options) {
+        super(options);
         if (Mesh.instance) {
             return Mesh.instance;
         }
         // 初始化缓存
-        _this.shapeBucket = new Map();
-        _this.gridCache = new Map();
+        this.shapeBucket = new Map();
+        this.gridCache = new Map();
         // 记录格点大小
-        _this.gridSize = options.gridSize;
+        this.gridSize = options.gridSize;
         // 初始化监听器
-        _this.initListener();
-        Mesh.instance = _this;
-        return _this;
+        this.initListener();
+        Mesh.instance = this;
     }
-    Mesh.prototype.destroy = function () {
+    destroy() {
         bus.namespace(Namespace.INTERACTION).remove(EventTypes.MOVE);
         bus.namespace(Namespace.INIT).remove(EventTypes.SHAPE);
         bus.namespace(Namespace.INTERACTION).remove(EventTypes.MOUSEDOWN);
-    };
-    Mesh.prototype.initListener = function () {
+    }
+    initListener() {
         // shape初始化事件
         bus.namespace(Namespace.INIT).on(EventTypes.SHAPE, this.handleShapeReady);
         // 鼠标移动事件
         bus.namespace(Namespace.INTERACTION).on(EventTypes.MOVE, this.handleMouseMove);
         // 鼠标点击事件
         bus.namespace(Namespace.INTERACTION).on(EventTypes.MOUSEDOWN, this.handleMouseDown);
+    }
+    // 监听鼠标移动，计算当前hover shape
+    handleMouseMove = (point) => {
+        const grid = getMeshGrid(point.x, point.y, this.gridSize).join(':');
+        const cache = this.gridCache.get(grid);
+        if (cache) {
+            if (cache?.list?.length) {
+                const shape = this.shapeBucket.get(cache.list[0]);
+                bus.namespace(Namespace.INTERACTION).emit(EventTypes.HOVER, shape);
+                return;
+            }
+        }
+        bus.namespace(Namespace.INTERACTION).emit(EventTypes.HOVER, null);
+    };
+    // 鼠标点击
+    handleMouseDown = (point) => {
+        const grid = getMeshGrid(point.x, point.y, this.gridSize).join(':');
+        // console.log('grid', grid);
+        const cache = this.gridCache.get(grid);
+        if (cache) {
+            if (cache?.list?.length) {
+                // 此处可精细化处理：
+                // 1. 缩小搜索范围，将list中shape重新按照zindex排序
+                const shapeList = cache.list.map((i) => this.shapeBucket.get(i));
+                shapeList.sort((a, b) => b.zIndex - a.zIndex);
+                // 2. 精确计算被点击元素
+                const len = shapeList.length;
+                let target = shapeList[0];
+                for (let i = 0; i < len; i++) {
+                    const shape = shapeList[i];
+                    const radius = getDistance(point.x, point.y, shape.x, shape.y);
+                    if (radius <= shape.radius) {
+                        target = shape;
+                        break;
+                    }
+                }
+                target.zIndex = shapeList[0].zIndex + 1;
+                // 直接修改，不好吗？
+                this.gridCache.get(grid).list = shapeList.map((i) => i.id);
+                bus.namespace(Namespace.INTERACTION).emit(EventTypes.CLICK, target);
+                return;
+            }
+        }
+    };
+    handleShapeReady = (shape) => {
+        console.log('shape ready', shape);
+        this.recordShape(shape);
     };
     // 录入图形，形成坐标
-    Mesh.prototype.recordShape = function (shape) {
-        var id = shape.id;
+    recordShape(shape) {
+        const { id } = shape;
         // 记录原始数据
         this.shapeBucket.set(id, shape);
         // 更新格点缓存
         this.updateGridCache(shape);
-    };
+    }
     // 删除图形
     // TODO: 优化性能
-    Mesh.prototype.removeShape = function (shape) {
-        var _this = this;
-        var id = shape.id, meshGridList = shape.meshGridList, zIndex = shape.zIndex;
+    removeShape(shape) {
+        const { id, meshGridList, zIndex } = shape;
         this.shapeBucket.delete(id);
-        meshGridList.forEach(function (grid) {
-            var cache = _this.gridCache.get(grid);
+        meshGridList.forEach((grid) => {
+            const cache = this.gridCache.get(grid);
             if (cache) {
-                cache.list = cache.list.filter(function (i) { return i != id; });
+                cache.list = cache.list.filter((i) => i != id);
                 if (cache.topIndex == zIndex && cache.list.length) {
-                    var topShape = _this.shapeBucket.get(cache.list[0]);
+                    const topShape = this.shapeBucket.get(cache.list[0]);
                     cache.topIndex = topShape.zIndex;
                 }
-                _this.gridCache.set(grid, cache);
+                this.gridCache.set(grid, cache);
             }
         });
-    };
+    }
     // 格点缓存
     // 此处并未实现真实的zindex倒序排列，因此最终效果有偏差
-    Mesh.prototype.updateGridCache = function (shape) {
-        var _this = this;
-        var id = shape.id, meshGridList = shape.meshGridList, zIndex = shape.zIndex;
-        meshGridList.forEach(function (grid) {
-            var cache = _this.gridCache.get(grid);
+    updateGridCache(shape) {
+        const { id, meshGridList, zIndex } = shape;
+        meshGridList.forEach((grid) => {
+            let cache = this.gridCache.get(grid);
             if (!cache) {
                 cache = {
                     list: [],
                     topIndex: 0,
                 };
             }
-            var topIndex = cache.topIndex, list = cache.list;
+            let { topIndex, list } = cache;
             // 更新最大zindex
             if (zIndex > topIndex) {
                 topIndex = zIndex;
@@ -1099,44 +1075,42 @@ var Mesh = /** @class */ (function (_super) {
                 list.push(id);
             }
             // 更新缓存
-            _this.gridCache.set(grid, { topIndex: topIndex, list: list });
+            this.gridCache.set(grid, { topIndex, list });
         });
-    };
+    }
     // 辅助方法：渲染格子
-    Mesh.prototype.fillGrid = function (grid) {
-        var _a = __read(grid.split(':').map(function (i) { return Number(i); }), 2), x = _a[0], y = _a[1];
+    fillGrid(grid) {
+        const [x, y] = grid.split(':').map((i) => Number(i));
         this.ctx.fillStyle = '#666';
         this.ctx.fillRect(x * this.gridSize, y * this.gridSize, this.gridSize, this.gridSize);
-    };
+    }
     // 渲染网格坐标
-    Mesh.prototype.renderGrid = function () {
-        var ctx = this.ctx;
+    renderGrid() {
+        const ctx = this.ctx;
         ctx.lineWidth = 0.5;
         ctx.strokeStyle = '#d2e2f7';
-        var gridSize = this.gridSize;
-        var xStart = 0;
-        var xEnd = this.container.clientWidth;
-        var yStart = 0;
-        var yEnd = this.container.clientHeight;
+        const gridSize = this.gridSize;
+        const xStart = 0;
+        const xEnd = this.container.clientWidth;
+        const yStart = 0;
+        const yEnd = this.container.clientHeight;
         ctx.beginPath();
         // 画网格, x axios
-        for (var x = xStart; x <= xEnd + gridSize; x += gridSize) {
+        for (let x = xStart; x <= xEnd + gridSize; x += gridSize) {
             // 超出坐标系绘制，防止有空隙
             ctx.moveTo(x, yStart - gridSize);
             ctx.lineTo(x, yEnd + gridSize);
         }
         // 画网格, y axios
-        for (var y = yStart; y <= yEnd + gridSize; y += gridSize) {
+        for (let y = yStart; y <= yEnd + gridSize; y += gridSize) {
             // 超出坐标系绘制，防止有空隙
             ctx.moveTo(xStart - gridSize, y);
             ctx.lineTo(xEnd + gridSize, y);
         }
-        var x, y; 
         ctx.closePath();
         ctx.stroke();
-    };
-    return Mesh;
-}(Canvas));
+    }
+}
 
 /*
  * @Author: yorshka
@@ -1146,9 +1120,25 @@ var Mesh = /** @class */ (function (_super) {
  *
  * shape类型，用来储存需要被绘制的数据
  */
-var Shape = /** @class */ (function () {
-    function Shape(options) {
-        var x = options.x, y = options.y, radius = options.radius, zIndex = options.zIndex;
+class Shape {
+    // 唯一id
+    id;
+    // ellipse 类型参数
+    x;
+    y;
+    radius;
+    // 填充颜色
+    fillColor;
+    // cover到的grid的区域
+    coverArea;
+    // 格点大小
+    gridSize;
+    // 层级参数
+    zIndex;
+    // 自身格点缓存信息
+    meshGridList;
+    constructor(options) {
+        const { x, y, radius, zIndex } = options;
         //   保存原始数据
         this.x = x;
         this.y = y;
@@ -1171,25 +1161,24 @@ var Shape = /** @class */ (function () {
     // 初始化缓存
     // 1. 找出所有覆盖到的grid
     // 2. 记录每个grid的id
-    Shape.prototype.initCache = function () {
-        var _this = this;
-        setTimeout(function () {
-            var gridList = getCoveredGrid(_this.x, _this.y, _this.radius, _this.gridSize);
+    initCache() {
+        setTimeout(() => {
+            const gridList = getCoveredGrid(this.x, this.y, this.radius, this.gridSize);
             // 记录cover区域，用于局部擦除
-            _this.coverArea = getCoverArea(_this.x, _this.y, _this.radius, _this.gridSize);
-            _this.meshGridList = gridList;
-            console.log('finish cache: ', _this.zIndex, _this.id);
-            bus.namespace(Namespace.INIT).emit(EventTypes.SHAPE, _this);
+            this.coverArea = getCoverArea(this.x, this.y, this.radius, this.gridSize);
+            this.meshGridList = gridList;
+            console.log('finish cache: ', this.zIndex, this.id);
+            bus.namespace(Namespace.INIT).emit(EventTypes.SHAPE, this);
         }, 0);
-    };
-    Shape.prototype.setColor = function (color) {
+    }
+    setColor(color) {
         this.fillColor = color;
-    };
-    Shape.prototype.levelUp = function () {
+    }
+    levelUp() {
         this.zIndex += 1;
-    };
+    }
     // 自身渲染
-    Shape.prototype.render = function (ctx) {
+    render(ctx) {
         if (!ctx) {
             return;
         }
@@ -1204,9 +1193,8 @@ var Shape = /** @class */ (function () {
         ctx.fillStyle = this.fillColor;
         ctx.fill();
         ctx.closePath();
-    };
-    return Shape;
-}());
+    }
+}
 
 /*
  * @Author: yorshka
@@ -1215,7 +1203,7 @@ var Shape = /** @class */ (function () {
  * @Last Modified time: 2021-01-30 21:00:28
  */
 function getNextColor(color) {
-    var index = COLOR_SET.indexOf(color);
+    const index = COLOR_SET.indexOf(color);
     if (index >= 0) {
         if (index + 1 < COLOR_SET.length) {
             return COLOR_SET[index + 1];
@@ -1228,48 +1216,32 @@ function getNextColor(color) {
  * @Author: yorshka
  * @Date: 2021-01-29 10:25:35
  * @Last Modified by: yorshka
- * @Last Modified time: 2021-02-01 11:33:30
+ * @Last Modified time: 2021-02-01 11:41:44
  *
  * canvas demo.
  *
  */
-var Demo = /** @class */ (function () {
-    function Demo(options) {
-        var _this = this;
-        // 粗粒化格子大小
-        this.gridSize = GRIDSIZE;
-        // 缓存层
-        this.cacheLayer = null;
-        // 点击元素
-        this.clickHandler = function (shape) {
-            console.log('click', shape);
-            var fillColor = shape.fillColor, meshGridList = shape.meshGridList;
-            // 更新颜色
-            shape.setColor(getNextColor(fillColor));
-            // 更新位置
-            shape.levelUp();
-            // 1. 局部擦除
-            // 2. 按照zindex重绘被擦除的元素
-            // 建立局部刷新区域
-            // 待重绘shape
-            var reRenderShape = [];
-            // 记录待重绘元素
-            meshGridList.forEach(function (grid) {
-                var cache = _this.meshLayer.gridCache.get(grid);
-                if (cache) {
-                    reRenderShape = __spread(reRenderShape, cache.list);
-                }
-            });
-            console.log('clearArea', shape.coverArea);
-            reRenderShape = __spread(new Set(__spread(reRenderShape)));
-            console.log('reRenderShape', reRenderShape);
-            // 擦除
-            _this.clearGrid(shape.coverArea);
-            // 重绘
-            _this.reRender(reRenderShape, shape);
-        };
-        var name = options.container;
-        var container = document.getElementById(name || 'container');
+class Demo {
+    // 容器及实例
+    container;
+    width;
+    height;
+    // 粗粒化格子大小
+    gridSize = GRIDSIZE;
+    // 交互控制句柄，可取消监听器
+    interactionHandler;
+    /* 按层级排列 */
+    // 鼠标事件感知层
+    interactionLayer;
+    // 缓存层
+    cacheLayer = null;
+    // 主画布
+    displayLayer;
+    // 坐标层
+    meshLayer;
+    constructor(options) {
+        const { container: name } = options;
+        const container = document.getElementById(name || 'container');
         // 保存容器
         this.container = container;
         this.width = container.clientWidth;
@@ -1277,27 +1249,27 @@ var Demo = /** @class */ (function () {
         // 鼠标动作感知图层
         this.interactionLayer = new Canvas({
             id: 'interaction',
-            container: container,
+            container,
             zIndex: 4,
         });
         // cache层，快速擦除，内容较少
         {
             this.cacheLayer = new Highlight({
                 id: 'cache',
-                container: container,
+                container,
                 zIndex: 3,
             });
         }
         // 主画布
         this.displayLayer = new Canvas({
             id: 'main',
-            container: container,
+            container,
             zIndex: 2,
         });
         // 网格画布，用作坐标感知
         this.meshLayer = new Mesh({
             id: 'mesh',
-            container: container,
+            container,
             zIndex: 1,
             // hide: true,
             gridSize: this.gridSize,
@@ -1312,7 +1284,7 @@ var Demo = /** @class */ (function () {
         });
         this.initListener();
     }
-    Demo.prototype.initListener = function () {
+    initListener() {
         bus.namespace(Namespace.INTERACTION).on(EventTypes.CLICK, this.clickHandler);
         // EventBus.namespace(Namespace.INTERACTION).on(
         //   EventTypes.MOVE,
@@ -1322,46 +1294,73 @@ var Demo = /** @class */ (function () {
         //   EventTypes.HOVER,
         //   this.hoverHandler
         // );
-    };
-    Demo.prototype.uninit = function () {
+    }
+    unbindEvent() {
         bus.namespace(Namespace.INTERACTION).remove(EventTypes.CLICK);
         // EventBus.namespace(Namespace.INTERACTION).remove(EventTypes.MOVE);
         // EventBus.namespace(Namespace.INTERACTION).remove(EventTypes.HOVER);
+    }
+    // 点击元素
+    clickHandler = (shape) => {
+        console.log('click', shape);
+        const { fillColor, meshGridList } = shape;
+        // 更新颜色
+        shape.setColor(getNextColor(fillColor));
+        // 更新位置
+        shape.levelUp();
+        // 1. 局部擦除
+        // 2. 按照zindex重绘被擦除的元素
+        // 建立局部刷新区域
+        // 待重绘shape
+        let reRenderShape = [];
+        // 记录待重绘元素
+        meshGridList.forEach((grid) => {
+            const cache = this.meshLayer.gridCache.get(grid);
+            if (cache) {
+                reRenderShape = [...reRenderShape, ...cache.list];
+            }
+        });
+        console.log('clearArea', shape.coverArea);
+        reRenderShape = [...new Set([...reRenderShape])];
+        console.log('reRenderShape', reRenderShape);
+        // 擦除
+        this.clearGrid(shape.coverArea);
+        // 重绘
+        this.reRender(reRenderShape, shape);
     };
     // 局部擦除
-    Demo.prototype.clearGrid = function (area) {
+    clearGrid(area) {
         this.getCtx().clearRect(area.x, area.y, area.width, area.height);
-    };
+    }
     // 局部重绘
-    Demo.prototype.reRender = function (list, targetShape) {
-        var _this = this;
+    reRender(list, targetShape) {
         // targetShape最后render
         // 按zindex顺序绘制
-        var shapeList = list.map(function (id) { return _this.meshLayer.shapeBucket.get(id); });
-        shapeList.sort(function (a, b) { return b.zIndex - a.zIndex; });
+        const shapeList = list.map((id) => this.meshLayer.shapeBucket.get(id));
+        shapeList.sort((a, b) => b.zIndex - a.zIndex);
         // console.log('shapeList', shapeList);
-        var ctx = this.getCtx();
-        shapeList.forEach(function (shape) {
+        const ctx = this.getCtx();
+        shapeList.forEach((shape) => {
             shape.render(ctx);
         });
         // 最后绘制
         targetShape.render(ctx);
-    };
+    }
     // 销毁（其实不用调用）
-    Demo.prototype.destroy = function () {
+    destroy() {
         // 取消监听器
         this.interactionHandler.destroy();
         // 解除eventBus
-        this.uninit();
-    };
-    Demo.prototype.getCtx = function () {
+        this.unbindEvent();
+    }
+    getCtx() {
         return this.displayLayer.ctx;
-    };
+    }
     // 生成count个随机shape
-    Demo.prototype.generateShape = function (count) {
-        var list = [];
+    generateShape(count) {
+        const list = [];
         while (count) {
-            var shape = new Shape({
+            const shape = new Shape({
                 x: Math.floor(Math.random() * this.width),
                 y: Math.floor(Math.random() * this.height),
                 radius: Math.floor(Math.random() * 10 + 30),
@@ -1371,9 +1370,8 @@ var Demo = /** @class */ (function () {
             count--;
         }
         return list;
-    };
-    return Demo;
-}());
+    }
+}
 
 /*
  * @Author: yorshka
@@ -1384,19 +1382,19 @@ var Demo = /** @class */ (function () {
  * demo: 数百个圆，随机排布，可被鼠标点击。点击后变色并置于顶层，其他圆的绘制顺序不变。
  */
 // 新建demo实例
-var demo = new Demo({
+const demo = new Demo({
     container: 'container',
 });
 window.demo = demo;
 // 生成图形
-var shapeList = demo.generateShape(120);
+const shapeList = demo.generateShape(120);
 // 渲染图像
-var ctx = demo.getCtx();
-shapeList.forEach(function (shape) {
+const ctx = demo.getCtx();
+shapeList.forEach((shape) => {
     shape.render(ctx);
 });
 // 退出时销毁实例
-window.onunload = function () {
+window.onunload = () => {
     demo.destroy();
 };
 //# sourceMappingURL=bundle.js.map

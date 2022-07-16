@@ -2,7 +2,7 @@
  * @Author: yorshka
  * @Date: 2021-01-29 10:25:35
  * @Last Modified by: yorshka
- * @Last Modified time: 2021-02-01 11:33:30
+ * @Last Modified time: 2021-02-01 11:41:44
  *
  * canvas demo.
  *
@@ -113,7 +113,7 @@ export default class Demo {
     // );
   }
 
-  public uninit(): void {
+  public unbindEvent(): void {
     EventBus.namespace(Namespace.INTERACTION).remove(EventTypes.CLICK);
     // EventBus.namespace(Namespace.INTERACTION).remove(EventTypes.MOVE);
     // EventBus.namespace(Namespace.INTERACTION).remove(EventTypes.HOVER);
@@ -177,7 +177,7 @@ export default class Demo {
     // 取消监听器
     this.interactionHandler.destroy();
     // 解除eventBus
-    this.uninit();
+    this.unbindEvent();
   }
 
   public getCtx(): CanvasRenderingContext2D {

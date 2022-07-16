@@ -10,7 +10,7 @@
 import { Canvas } from '@src/canvas';
 import { EventBus, EventTypes, Namespace } from '@src/eventBus';
 import { Mesh } from '@src/mesh';
-import throttle from 'lodash/throttle';
+import { throttle } from 'lodash-es';
 
 interface InteractionOptions {
   target: Canvas;

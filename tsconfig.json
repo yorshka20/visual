@@ -1,7 +1,10 @@
 {
+  "extends": "@tsconfig/recommended/tsconfig.json",
   "compilerOptions": {
     /* Basic Options */
-    "target": "ES5",
+    "target": "esnext",
+    "module": "esnext",
+    "lib": [/* 指定引用的标准库 */ "esnext", "dom", "dom.iterable"],
 
     "allowJs": true /* Allow javascript files to be compiled. */,
     // "jsx": "preserve",                     /* Specify JSX code generation: 'preserve', 'react-native', or 'react'. */
@@ -27,6 +30,5 @@
     } /* A series of entries which re-map imports to lookup locations relative to the 'baseUrl'. */
   },
 
-  "include": ["src/**/*"],
-  "exclude": ["dist/*"]
+  "include": ["src/**/*"]
 }
