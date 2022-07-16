@@ -5,7 +5,9 @@
  * @Last Modified time: 2021-01-30 22:00:05
  */
 
-import { CoverArea } from '.';
+import type { CoverArea } from './index';
+
+type PosCell = [number, number];
 
 // 获得shape cover的格子
 export function getCoveredGrid(
@@ -17,15 +19,24 @@ export function getCoveredGrid(
   const list = [];
 
   // boundingBox三顶点： 左上，右上，左下
-  const lt = [x - radius < 0 ? 0 : x - radius, y - radius < 0 ? 0 : y - radius];
-  const rt = [x + radius, y - radius < 0 ? 0 : y - radius];
-  const lb = [x - radius < 0 ? 0 : x - radius, y + radius];
+  const lt: PosCell = [
+    x - radius < 0 ? 0 : x - radius,
+    y - radius < 0 ? 0 : y - radius,
+  ];
+  const rt: PosCell = [x + radius, y - radius < 0 ? 0 : y - radius];
+  const lb: PosCell = [x - radius < 0 ? 0 : x - radius, y + radius];
 
   // console.log('x,y,radius', x, y, radius);
   // console.log('lt,rt,lb', lt, rt, lb);
 
-  const xAxis = [Math.floor(lt[0] / gridSize), Math.floor(rt[0] / gridSize)];
-  const yAxis = [Math.floor(lt[1] / gridSize), Math.floor(lb[1] / gridSize)];
+  const xAxis: PosCell = [
+    Math.floor(lt[0] / gridSize),
+    Math.floor(rt[0] / gridSize),
+  ];
+  const yAxis: PosCell = [
+    Math.floor(lt[1] / gridSize),
+    Math.floor(lb[1] / gridSize),
+  ];
 
   // console.log('xAxis,yAxis', xAxis, yAxis);
 
@@ -63,12 +74,21 @@ export function getCoverArea(
   };
 
   // boundingBox三顶点： 左上，右上，左下
-  const lt = [x - radius < 0 ? 0 : x - radius, y - radius < 0 ? 0 : y - radius];
-  const rt = [x + radius, y - radius < 0 ? 0 : y - radius];
-  const lb = [x - radius < 0 ? 0 : x - radius, y + radius];
+  const lt: PosCell = [
+    x - radius < 0 ? 0 : x - radius,
+    y - radius < 0 ? 0 : y - radius,
+  ];
+  const rt: PosCell = [x + radius, y - radius < 0 ? 0 : y - radius];
+  const lb: PosCell = [x - radius < 0 ? 0 : x - radius, y + radius];
 
-  const xAxis = [Math.floor(lt[0] / gridSize), Math.floor(rt[0] / gridSize)];
-  const yAxis = [Math.floor(lt[1] / gridSize), Math.floor(lb[1] / gridSize)];
+  const xAxis: PosCell = [
+    Math.floor(lt[0] / gridSize),
+    Math.floor(rt[0] / gridSize),
+  ];
+  const yAxis: PosCell = [
+    Math.floor(lt[1] / gridSize),
+    Math.floor(lb[1] / gridSize),
+  ];
 
   area.x = xAxis[0] * gridSize;
   area.y = yAxis[0] * gridSize;

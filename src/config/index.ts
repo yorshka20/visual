@@ -1,5 +1,5 @@
 // mesh格子大小
-export const GRIDSIZE = 10;
+export const GRID_SIZE = 10;
 
 // 是否渲染网格
 export const SHOW_MESH = true;
@@ -14,4 +14,4 @@ export const SHOW_SHAPE_GRID = false;
 export const SHOW_HIGHLIGHT = true;
 
 // 点击变色色列
-export const COLOR_SET = ['#FF0000', '#EE0000', '#CD0000', '#8B0000'];
+export const COLOR_SET: string[] = ['#FF0000', '#EE0000', '#CD0000', '#8B0000'];

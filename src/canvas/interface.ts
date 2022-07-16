@@ -5,7 +5,7 @@
  * @Last Modified time: 2021-01-30 01:06:33
  */
 
-export interface CanvasOptions {
+export interface VCanvasOptions {
   id: string;
   container: HTMLElement;
   zIndex: number; // z轴层级，用来隔离多层canvas

@@ -1,34 +1,33 @@
 {
-  "extends": "@tsconfig/recommended/tsconfig.json",
+  "$schema": "https://json.schemastore.org/tsconfig",
+  "display": "Node 16 + ESM + Strictest",
   "compilerOptions": {
-    /* Basic Options */
-    "target": "esnext",
-    "module": "esnext",
-    "lib": [/* 指定引用的标准库 */ "esnext", "dom", "dom.iterable"],
-
-    "allowJs": true /* Allow javascript files to be compiled. */,
-    // "jsx": "preserve",                     /* Specify JSX code generation: 'preserve', 'react-native', or 'react'. */
-    // "declaration": true /* Generates corresponding '.d.ts' file. */,
-    "sourceMap": true /* Generates corresponding '.map' file. */,
-    /* Strict Type-Checking Options */
-    "strict": true /* Enable all strict type-checking options. */,
-    "noImplicitAny": false /* Raise error on expressions and declarations with an implied 'any' type. */,
-    "strictNullChecks": false /* Enable strict null checks. */,
-    // "strictFunctionTypes": true,           /* Enable strict checking of function types. */
-    "noImplicitThis": false /* Raise error on 'this' expressions with an implied 'any' type. */,
-    "alwaysStrict": true /* Parse in strict mode and emit "use strict" for each source file. */,
-
-    "downlevelIteration": true,
-
-    "noUnusedLocals": false,
-    "noUnusedParameters": false,
-    /* Module Resolution Options */
+    "lib": ["es2021", "dom"],
+    "module": "ESNext",
+    "target": "es2021",
+    "strict": true,
+    "alwaysStrict": false,
+    "esModuleInterop": true,
+    "skipLibCheck": true,
+    "forceConsistentCasingInFileNames": true,
     "moduleResolution": "node",
-    "baseUrl": "./",
-    "paths": {
-      "@src/*": ["./src/*"]
-    } /* A series of entries which re-map imports to lookup locations relative to the 'baseUrl'. */
-  },
+    "allowUnusedLabels": false,
+    "allowUnreachableCode": false,
+    "exactOptionalPropertyTypes": true,
+    "noFallthroughCasesInSwitch": true,
+    "noImplicitOverride": true,
+    "noImplicitReturns": true,
+    "noPropertyAccessFromIndexSignature": true,
+    "noUncheckedIndexedAccess": true,
+    "noUnusedLocals": true,
+    "noUnusedParameters": true,
+    "importsNotUsedAsValues": "error",
+    "checkJs": true,
 
-  "include": ["src/**/*"]
+    "baseUrl": "./",
+
+    "paths": {
+      "@src/*": ["src/*"]
+    }
+  }
 }

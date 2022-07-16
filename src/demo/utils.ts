@@ -11,9 +11,9 @@ export function getNextColor(color: string): string {
   const index = COLOR_SET.indexOf(color);
   if (index >= 0) {
     if (index + 1 < COLOR_SET.length) {
-      return COLOR_SET[index + 1];
+      return COLOR_SET[index + 1] as string;
     }
   }
 
-  return COLOR_SET[0];
+  return COLOR_SET[0] as string;
 }

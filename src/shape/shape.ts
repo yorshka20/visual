@@ -10,7 +10,8 @@
 import { EventBus, EventTypes, Namespace } from '@src/eventBus';
 import { Mesh } from '@src/mesh';
 import { getCoverArea, getCoveredGrid } from './utils';
-import { ShapeOptions, CoverArea } from './interface';
+import type { ShapeOptions, CoverArea } from './interface';
+
 export default class Shape {
   // 唯一id
   id: string;
@@ -33,7 +34,7 @@ export default class Shape {
   zIndex: number;
 
   // 自身格点缓存信息
-  meshGridList: string[];
+  meshGridList: string[] = [''];
 
   constructor(options: ShapeOptions) {
     const { x, y, radius, zIndex } = options;

@@ -7,21 +7,21 @@
  * 高亮层，绘制鼠标感知状态
  */
 
-import { Canvas } from '@src/canvas';
-import { CanvasOptions } from '@src/canvas/interface';
+import { VCanvas } from '@src/canvas';
+import type { VCanvasOptions } from '@src/canvas/interface';
 import { EventBus, EventTypes, Namespace } from '@src/eventBus';
 import { computeBoundingBox } from '@src/mesh/utils';
-import { Shape } from '@src/shape';
+import type { Shape } from '@src/shape';
 
-interface HighlightOptions extends CanvasOptions {
+interface HighlightOptions extends VCanvasOptions {
   //
 }
 
-export default class Highlight extends Canvas {
-  private _target: Shape; // hover shape id
+export default class Highlight extends VCanvas {
+  private _target: Shape | undefined; // hover shape id
 
   private get hoverTarget() {
-    return this._target;
+    return this._target!;
   }
 
   private set hoverTarget(val: Shape) {
@@ -41,16 +41,16 @@ export default class Highlight extends Canvas {
     super(options);
 
     //   设置高亮stroke颜色
-    this.ctx.strokeStyle = '#00FF00';
+    this.ctx!.strokeStyle = '#00FF00';
 
-    this._target = null;
+    this._target = undefined;
 
     //   初始化监听器
     this.init();
   }
 
   public destroy(): void {
-    this.uninit();
+    this.unbindEvents();
   }
 
   private init(): void {
@@ -60,7 +60,7 @@ export default class Highlight extends Canvas {
     );
   }
 
-  private uninit(): void {
+  private unbindEvents(): void {
     EventBus.namespace(Namespace.INTERACTION).remove(EventTypes.HOVER);
   }
 
@@ -72,10 +72,10 @@ export default class Highlight extends Canvas {
   private drawHighlight(shape: Shape): void {
     const rect = computeBoundingBox(shape);
 
-    this.ctx.strokeRect(rect.x, rect.y, rect.width, rect.height);
+    this.ctx!.strokeRect(rect.x, rect.y, rect.width, rect.height);
   }
 
   private clean(): void {
-    this.ctx.clearRect(0, 0, this.width, this.height);
+    this.ctx!.clearRect(0, 0, this.width, this.height);
   }
 }

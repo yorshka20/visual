@@ -1,21 +1,21 @@
 /*
  * @Author: yorshka
  * @Date: 2021-01-29 10:25:35
- * @Last Modified by: yorshka
- * @Last Modified time: 2021-02-01 11:41:44
+ * @Last Modified by: liuxikai.2021@bytedance.com
+ * @Last Modified time: 2022-04-02 23:57:44
  *
  * canvas demo.
  *
  */
 
-import { Canvas } from '@src/canvas';
-import { GRIDSIZE, SHOW_HIGHLIGHT, SHOW_MESH } from '@src/config';
+import { VCanvas } from '@src/canvas';
+import { GRID_SIZE, SHOW_HIGHLIGHT, SHOW_MESH } from '@src/config';
 import { EventBus, EventTypes, Namespace } from '@src/eventBus';
 import { Highlight } from '@src/highlight';
 import { Interaction } from '@src/interaction';
 import { Mesh } from '@src/mesh';
 import { CoverArea, Shape } from '@src/shape';
-import { DemoOptions } from './interface';
+import type { DemoOptions } from './interface';
 import { getNextColor } from './utils';
 
 export default class Demo {
@@ -23,21 +23,22 @@ export default class Demo {
   private container: HTMLElement | null;
 
   private width: number;
+
   private height: number;
 
   // 粗粒化格子大小
-  private gridSize = GRIDSIZE;
+  private gridSize = GRID_SIZE;
 
   // 交互控制句柄，可取消监听器
   private interactionHandler: Interaction;
 
   /* 按层级排列 */
   // 鼠标事件感知层
-  private interactionLayer: Canvas;
+  private interactionLayer: VCanvas;
   // 缓存层
-  private cacheLayer: Canvas = null;
+  private cacheLayer: VCanvas | undefined;
   // 主画布
-  private displayLayer: Canvas;
+  private displayLayer: VCanvas;
   // 坐标层
   private meshLayer: Mesh;
 
@@ -50,11 +51,13 @@ export default class Demo {
     // 保存容器
     this.container = container;
 
+    console.log('this.container', this.container, this.cacheLayer);
+
     this.width = container.clientWidth;
     this.height = container.clientHeight;
 
     // 鼠标动作感知图层
-    this.interactionLayer = new Canvas({
+    this.interactionLayer = new VCanvas({
       id: 'interaction',
       container,
       zIndex: 4,
@@ -70,7 +73,7 @@ export default class Demo {
     }
 
     // 主画布
-    this.displayLayer = new Canvas({
+    this.displayLayer = new VCanvas({
       id: 'main',
       container,
       zIndex: 2,
@@ -153,15 +156,17 @@ export default class Demo {
 
   // 局部擦除
   private clearGrid(area: CoverArea): void {
-    this.getCtx().clearRect(area.x, area.y, area.width, area.height);
+    this.getCtx()?.clearRect(area.x, area.y, area.width, area.height);
   }
 
   // 局部重绘
   private reRender(list: string[], targetShape: Shape): void {
     // targetShape最后render
     // 按zindex顺序绘制
-    const shapeList = list.map((id) => this.meshLayer.shapeBucket.get(id));
-    shapeList.sort((a, b) => b.zIndex - a.zIndex);
+    const shapeList = list.map(
+      (id) => this.meshLayer.shapeBucket.get(id) as Shape
+    );
+    shapeList.sort((a, b) => b?.zIndex - a?.zIndex);
     // console.log('shapeList', shapeList);
     const ctx = this.getCtx();
     shapeList.forEach((shape) => {
@@ -181,7 +186,7 @@ export default class Demo {
   }
 
   public getCtx(): CanvasRenderingContext2D {
-    return this.displayLayer.ctx;
+    return this.displayLayer.ctx!;
   }
 
   // 生成count个随机shape

@@ -1,3 +1,4 @@
-import Canvas from './canvas';
+import VCanvas from './canvas';
+import type { VCanvasOptions } from './interface';
 
-export { Canvas };
+export { VCanvas, VCanvasOptions };

@@ -8,20 +8,12 @@
  *
  * 自定义canvas类型，大小与容器一致
  */
-class Canvas {
-    // 挂载容器
-    container;
-    // DOM canvas元素实例(对外暴露)
-    canvasEle;
-    // 2d context
-    ctx;
-    // 宽高
-    width;
-    height;
+class VCanvas {
     constructor(options) {
         const { container, zIndex, hide, id } = options;
         //   保存canvas挂载容器
         this.container = container;
+        this.id = id;
         //   创建canvas元素
         const canvas = document.createElement('canvas');
         canvas.width = container.clientWidth;
@@ -35,7 +27,7 @@ class Canvas {
         canvas.style.top = '0';
         canvas.style.left = '0';
         // 设置z层级
-        canvas.style.zIndex = zIndex + '';
+        canvas.style.zIndex = `${zIndex}`;
         //   store canvas element
         this.canvasEle = canvas;
         this.ctx = canvas.getContext('2d');
@@ -52,7 +44,7 @@ class Canvas {
 }
 
 // mesh格子大小
-const GRIDSIZE = 10;
+const GRID_SIZE = 10;
 // 点击变色色列
 const COLOR_SET = ['#FF0000', '#EE0000', '#CD0000', '#8B0000'];
 
@@ -66,16 +58,41 @@ const COLOR_SET = ['#FF0000', '#EE0000', '#CD0000', '#8B0000'];
  * 需要从全局作用域iife重构为class，否则会导致无法追踪的匿名监听器残留
  */
 class EventBus {
-    static _instance;
-    static get instance() {
-        if (!this._instance) {
-            this._instance = new EventBus();
-        }
-        return this._instance;
-    }
-    defaultNamespace;
-    namespaceCache;
     constructor() {
+        this.defaultNamespace = '';
+        this.namespaceCache = new Map();
+        // 监听一个事件
+        this.on = (name, key, fn) => {
+            const namespace = this.namespaceCache?.get(name);
+            if (!namespace) {
+                return;
+            }
+            const cache = namespace.eventBucket;
+            if (!cache[key]) {
+                cache[key] = [];
+            }
+            cache[key].push(fn);
+        };
+        // 移除一个事件。如果fn为空，则清空该事件下的所有事件
+        this.remove = (name, key, fn) => {
+            const namespace = this.namespaceCache?.get(name);
+            if (!namespace) {
+                return;
+            }
+            const cache = namespace.eventBucket;
+            if (cache[key]) {
+                if (fn) {
+                    for (let i = cache[key].length; i >= 0; i--) {
+                        if (cache[key][i] === fn) {
+                            cache[key].splice(i, 1);
+                        }
+                    }
+                }
+                else {
+                    cache[key] = [];
+                }
+            }
+        };
         if (EventBus._instance) {
             return EventBus._instance;
         }
@@ -83,9 +100,14 @@ class EventBus {
         this.namespaceCache = new Map();
         EventBus._instance = this;
     }
+    static get instance() {
+        if (!this._instance) {
+            this._instance = new EventBus();
+        }
+        return this._instance;
+    }
     clean() {
-        this.namespaceCache = null;
-        EventBus._instance = null;
+        this.namespaceCache.clear();
     }
     namespace(inputName) {
         const name = inputName || this.defaultNamespace; // 命名空间
@@ -113,38 +135,6 @@ class EventBus {
         this.namespaceCache.set(name, namespace);
         return namespace;
     }
-    // 监听一个事件
-    on = function (name, key, fn) {
-        const namespace = this.namespaceCache?.get(name);
-        if (!namespace) {
-            return;
-        }
-        const cache = namespace.eventBucket;
-        if (!cache[key]) {
-            cache[key] = [];
-        }
-        cache[key].push(fn);
-    };
-    // 移除一个事件。如果fn为空，则清空该事件下的所有事件
-    remove = function (name, key, fn) {
-        const namespace = this.namespaceCache?.get(name);
-        if (!namespace) {
-            return;
-        }
-        const cache = namespace.eventBucket;
-        if (cache[key]) {
-            if (fn) {
-                for (let i = cache[key].length; i >= 0; i--) {
-                    if (cache[key][i] === fn) {
-                        cache[key].splice(i, 1);
-                    }
-                }
-            }
-            else {
-                cache[key] = [];
-            }
-        }
-    };
 }
 
 /**
@@ -177,10 +167,6 @@ const bus = new EventBus();
  */
 // 包围盒
 class BoundingBox {
-    x;
-    y;
-    width;
-    height;
     constructor(data) {
         const { x, y, width, height } = data;
         this.x = x;
@@ -218,8 +204,18 @@ function getDistance(x1, y1, x2, y2) {
  *
  * 高亮层，绘制鼠标感知状态
  */
-class Highlight extends Canvas {
-    _target; // hover shape id
+class Highlight extends VCanvas {
+    constructor(options) {
+        super(options);
+        this.hoverHandler = (shape) => {
+            this.hoverTarget = shape;
+        };
+        //   设置高亮stroke颜色
+        this.ctx.strokeStyle = '#00FF00';
+        this._target = undefined;
+        //   初始化监听器
+        this.init();
+    }
     get hoverTarget() {
         return this._target;
     }
@@ -234,26 +230,15 @@ class Highlight extends Canvas {
             this.drawHighlight(val);
         }
     }
-    constructor(options) {
-        super(options);
-        //   设置高亮stroke颜色
-        this.ctx.strokeStyle = '#00FF00';
-        this._target = null;
-        //   初始化监听器
-        this.init();
-    }
     destroy() {
-        this.uninit();
+        this.unbindEvents();
     }
     init() {
         bus.namespace(Namespace.INTERACTION).on(EventTypes.HOVER, this.hoverHandler);
     }
-    uninit() {
+    unbindEvents() {
         bus.namespace(Namespace.INTERACTION).remove(EventTypes.HOVER);
     }
-    hoverHandler = (shape) => {
-        this.hoverTarget = shape;
-    };
     // 绘制高亮框
     drawHighlight(shape) {
         const rect = computeBoundingBox(shape);
@@ -262,6 +247,198 @@ class Highlight extends Canvas {
     clean() {
         this.ctx.clearRect(0, 0, this.width, this.height);
     }
+}
+
+/** Detect free variable `global` from Node.js. */
+var freeGlobal = typeof global == 'object' && global && global.Object === Object && global;
+
+var freeGlobal$1 = freeGlobal;
+
+/** Detect free variable `self`. */
+var freeSelf = typeof self == 'object' && self && self.Object === Object && self;
+
+/** Used as a reference to the global object. */
+var root = freeGlobal$1 || freeSelf || Function('return this')();
+
+var root$1 = root;
+
+/** Built-in value references. */
+var Symbol = root$1.Symbol;
+
+var Symbol$1 = Symbol;
+
+/** Used for built-in method references. */
+var objectProto$1 = Object.prototype;
+
+/** Used to check objects for own properties. */
+var hasOwnProperty = objectProto$1.hasOwnProperty;
+
+/**
+ * Used to resolve the
+ * [`toStringTag`](http://ecma-international.org/ecma-262/7.0/#sec-object.prototype.tostring)
+ * of values.
+ */
+var nativeObjectToString$1 = objectProto$1.toString;
+
+/** Built-in value references. */
+var symToStringTag$1 = Symbol$1 ? Symbol$1.toStringTag : undefined;
+
+/**
+ * A specialized version of `baseGetTag` which ignores `Symbol.toStringTag` values.
+ *
+ * @private
+ * @param {*} value The value to query.
+ * @returns {string} Returns the raw `toStringTag`.
+ */
+function getRawTag(value) {
+  var isOwn = hasOwnProperty.call(value, symToStringTag$1),
+      tag = value[symToStringTag$1];
+
+  try {
+    value[symToStringTag$1] = undefined;
+    var unmasked = true;
+  } catch (e) {}
+
+  var result = nativeObjectToString$1.call(value);
+  if (unmasked) {
+    if (isOwn) {
+      value[symToStringTag$1] = tag;
+    } else {
+      delete value[symToStringTag$1];
+    }
+  }
+  return result;
+}
+
+/** Used for built-in method references. */
+var objectProto = Object.prototype;
+
+/**
+ * Used to resolve the
+ * [`toStringTag`](http://ecma-international.org/ecma-262/7.0/#sec-object.prototype.tostring)
+ * of values.
+ */
+var nativeObjectToString = objectProto.toString;
+
+/**
+ * Converts `value` to a string using `Object.prototype.toString`.
+ *
+ * @private
+ * @param {*} value The value to convert.
+ * @returns {string} Returns the converted string.
+ */
+function objectToString(value) {
+  return nativeObjectToString.call(value);
+}
+
+/** `Object#toString` result references. */
+var nullTag = '[object Null]',
+    undefinedTag = '[object Undefined]';
+
+/** Built-in value references. */
+var symToStringTag = Symbol$1 ? Symbol$1.toStringTag : undefined;
+
+/**
+ * The base implementation of `getTag` without fallbacks for buggy environments.
+ *
+ * @private
+ * @param {*} value The value to query.
+ * @returns {string} Returns the `toStringTag`.
+ */
+function baseGetTag(value) {
+  if (value == null) {
+    return value === undefined ? undefinedTag : nullTag;
+  }
+  return (symToStringTag && symToStringTag in Object(value))
+    ? getRawTag(value)
+    : objectToString(value);
+}
+
+/**
+ * Checks if `value` is object-like. A value is object-like if it's not `null`
+ * and has a `typeof` result of "object".
+ *
+ * @static
+ * @memberOf _
+ * @since 4.0.0
+ * @category Lang
+ * @param {*} value The value to check.
+ * @returns {boolean} Returns `true` if `value` is object-like, else `false`.
+ * @example
+ *
+ * _.isObjectLike({});
+ * // => true
+ *
+ * _.isObjectLike([1, 2, 3]);
+ * // => true
+ *
+ * _.isObjectLike(_.noop);
+ * // => false
+ *
+ * _.isObjectLike(null);
+ * // => false
+ */
+function isObjectLike(value) {
+  return value != null && typeof value == 'object';
+}
+
+/** `Object#toString` result references. */
+var symbolTag = '[object Symbol]';
+
+/**
+ * Checks if `value` is classified as a `Symbol` primitive or object.
+ *
+ * @static
+ * @memberOf _
+ * @since 4.0.0
+ * @category Lang
+ * @param {*} value The value to check.
+ * @returns {boolean} Returns `true` if `value` is a symbol, else `false`.
+ * @example
+ *
+ * _.isSymbol(Symbol.iterator);
+ * // => true
+ *
+ * _.isSymbol('abc');
+ * // => false
+ */
+function isSymbol(value) {
+  return typeof value == 'symbol' ||
+    (isObjectLike(value) && baseGetTag(value) == symbolTag);
+}
+
+/** Used to match a single whitespace character. */
+var reWhitespace = /\s/;
+
+/**
+ * Used by `_.trim` and `_.trimEnd` to get the index of the last non-whitespace
+ * character of `string`.
+ *
+ * @private
+ * @param {string} string The string to inspect.
+ * @returns {number} Returns the index of the last non-whitespace character.
+ */
+function trimmedEndIndex(string) {
+  var index = string.length;
+
+  while (index-- && reWhitespace.test(string.charAt(index))) {}
+  return index;
+}
+
+/** Used to match leading whitespace. */
+var reTrimStart = /^\s+/;
+
+/**
+ * The base implementation of `_.trim`.
+ *
+ * @private
+ * @param {string} string The string to trim.
+ * @returns {string} Returns the trimmed string.
+ */
+function baseTrim(string) {
+  return string
+    ? string.slice(0, trimmedEndIndex(string) + 1).replace(reTrimStart, '')
+    : string;
 }
 
 /**
@@ -293,238 +470,6 @@ function isObject(value) {
   var type = typeof value;
   return value != null && (type == 'object' || type == 'function');
 }
-
-var isObject_1 = isObject;
-
-var commonjsGlobal = typeof globalThis !== 'undefined' ? globalThis : typeof window !== 'undefined' ? window : typeof global !== 'undefined' ? global : typeof self !== 'undefined' ? self : {};
-
-/** Detect free variable `global` from Node.js. */
-var freeGlobal = typeof commonjsGlobal == 'object' && commonjsGlobal && commonjsGlobal.Object === Object && commonjsGlobal;
-
-var _freeGlobal = freeGlobal;
-
-/** Detect free variable `self`. */
-var freeSelf = typeof self == 'object' && self && self.Object === Object && self;
-
-/** Used as a reference to the global object. */
-var root = _freeGlobal || freeSelf || Function('return this')();
-
-var _root = root;
-
-/**
- * Gets the timestamp of the number of milliseconds that have elapsed since
- * the Unix epoch (1 January 1970 00:00:00 UTC).
- *
- * @static
- * @memberOf _
- * @since 2.4.0
- * @category Date
- * @returns {number} Returns the timestamp.
- * @example
- *
- * _.defer(function(stamp) {
- *   console.log(_.now() - stamp);
- * }, _.now());
- * // => Logs the number of milliseconds it took for the deferred invocation.
- */
-var now = function() {
-  return _root.Date.now();
-};
-
-var now_1 = now;
-
-/** Used to match a single whitespace character. */
-var reWhitespace = /\s/;
-
-/**
- * Used by `_.trim` and `_.trimEnd` to get the index of the last non-whitespace
- * character of `string`.
- *
- * @private
- * @param {string} string The string to inspect.
- * @returns {number} Returns the index of the last non-whitespace character.
- */
-function trimmedEndIndex(string) {
-  var index = string.length;
-
-  while (index-- && reWhitespace.test(string.charAt(index))) {}
-  return index;
-}
-
-var _trimmedEndIndex = trimmedEndIndex;
-
-/** Used to match leading whitespace. */
-var reTrimStart = /^\s+/;
-
-/**
- * The base implementation of `_.trim`.
- *
- * @private
- * @param {string} string The string to trim.
- * @returns {string} Returns the trimmed string.
- */
-function baseTrim(string) {
-  return string
-    ? string.slice(0, _trimmedEndIndex(string) + 1).replace(reTrimStart, '')
-    : string;
-}
-
-var _baseTrim = baseTrim;
-
-/** Built-in value references. */
-var Symbol = _root.Symbol;
-
-var _Symbol = Symbol;
-
-/** Used for built-in method references. */
-var objectProto$1 = Object.prototype;
-
-/** Used to check objects for own properties. */
-var hasOwnProperty = objectProto$1.hasOwnProperty;
-
-/**
- * Used to resolve the
- * [`toStringTag`](http://ecma-international.org/ecma-262/7.0/#sec-object.prototype.tostring)
- * of values.
- */
-var nativeObjectToString$1 = objectProto$1.toString;
-
-/** Built-in value references. */
-var symToStringTag$1 = _Symbol ? _Symbol.toStringTag : undefined;
-
-/**
- * A specialized version of `baseGetTag` which ignores `Symbol.toStringTag` values.
- *
- * @private
- * @param {*} value The value to query.
- * @returns {string} Returns the raw `toStringTag`.
- */
-function getRawTag(value) {
-  var isOwn = hasOwnProperty.call(value, symToStringTag$1),
-      tag = value[symToStringTag$1];
-
-  try {
-    value[symToStringTag$1] = undefined;
-    var unmasked = true;
-  } catch (e) {}
-
-  var result = nativeObjectToString$1.call(value);
-  if (unmasked) {
-    if (isOwn) {
-      value[symToStringTag$1] = tag;
-    } else {
-      delete value[symToStringTag$1];
-    }
-  }
-  return result;
-}
-
-var _getRawTag = getRawTag;
-
-/** Used for built-in method references. */
-var objectProto = Object.prototype;
-
-/**
- * Used to resolve the
- * [`toStringTag`](http://ecma-international.org/ecma-262/7.0/#sec-object.prototype.tostring)
- * of values.
- */
-var nativeObjectToString = objectProto.toString;
-
-/**
- * Converts `value` to a string using `Object.prototype.toString`.
- *
- * @private
- * @param {*} value The value to convert.
- * @returns {string} Returns the converted string.
- */
-function objectToString(value) {
-  return nativeObjectToString.call(value);
-}
-
-var _objectToString = objectToString;
-
-/** `Object#toString` result references. */
-var nullTag = '[object Null]',
-    undefinedTag = '[object Undefined]';
-
-/** Built-in value references. */
-var symToStringTag = _Symbol ? _Symbol.toStringTag : undefined;
-
-/**
- * The base implementation of `getTag` without fallbacks for buggy environments.
- *
- * @private
- * @param {*} value The value to query.
- * @returns {string} Returns the `toStringTag`.
- */
-function baseGetTag(value) {
-  if (value == null) {
-    return value === undefined ? undefinedTag : nullTag;
-  }
-  return (symToStringTag && symToStringTag in Object(value))
-    ? _getRawTag(value)
-    : _objectToString(value);
-}
-
-var _baseGetTag = baseGetTag;
-
-/**
- * Checks if `value` is object-like. A value is object-like if it's not `null`
- * and has a `typeof` result of "object".
- *
- * @static
- * @memberOf _
- * @since 4.0.0
- * @category Lang
- * @param {*} value The value to check.
- * @returns {boolean} Returns `true` if `value` is object-like, else `false`.
- * @example
- *
- * _.isObjectLike({});
- * // => true
- *
- * _.isObjectLike([1, 2, 3]);
- * // => true
- *
- * _.isObjectLike(_.noop);
- * // => false
- *
- * _.isObjectLike(null);
- * // => false
- */
-function isObjectLike(value) {
-  return value != null && typeof value == 'object';
-}
-
-var isObjectLike_1 = isObjectLike;
-
-/** `Object#toString` result references. */
-var symbolTag = '[object Symbol]';
-
-/**
- * Checks if `value` is classified as a `Symbol` primitive or object.
- *
- * @static
- * @memberOf _
- * @since 4.0.0
- * @category Lang
- * @param {*} value The value to check.
- * @returns {boolean} Returns `true` if `value` is a symbol, else `false`.
- * @example
- *
- * _.isSymbol(Symbol.iterator);
- * // => true
- *
- * _.isSymbol('abc');
- * // => false
- */
-function isSymbol(value) {
-  return typeof value == 'symbol' ||
-    (isObjectLike_1(value) && _baseGetTag(value) == symbolTag);
-}
-
-var isSymbol_1 = isSymbol;
 
 /** Used as references for various `Number` constants. */
 var NAN = 0 / 0;
@@ -568,24 +513,44 @@ function toNumber(value) {
   if (typeof value == 'number') {
     return value;
   }
-  if (isSymbol_1(value)) {
+  if (isSymbol(value)) {
     return NAN;
   }
-  if (isObject_1(value)) {
+  if (isObject(value)) {
     var other = typeof value.valueOf == 'function' ? value.valueOf() : value;
-    value = isObject_1(other) ? (other + '') : other;
+    value = isObject(other) ? (other + '') : other;
   }
   if (typeof value != 'string') {
     return value === 0 ? value : +value;
   }
-  value = _baseTrim(value);
+  value = baseTrim(value);
   var isBinary = reIsBinary.test(value);
   return (isBinary || reIsOctal.test(value))
     ? freeParseInt(value.slice(2), isBinary ? 2 : 8)
     : (reIsBadHex.test(value) ? NAN : +value);
 }
 
-var toNumber_1 = toNumber;
+/**
+ * Gets the timestamp of the number of milliseconds that have elapsed since
+ * the Unix epoch (1 January 1970 00:00:00 UTC).
+ *
+ * @static
+ * @memberOf _
+ * @since 2.4.0
+ * @category Date
+ * @returns {number} Returns the timestamp.
+ * @example
+ *
+ * _.defer(function(stamp) {
+ *   console.log(_.now() - stamp);
+ * }, _.now());
+ * // => Logs the number of milliseconds it took for the deferred invocation.
+ */
+var now = function() {
+  return root$1.Date.now();
+};
+
+var now$1 = now;
 
 /** Error message constants. */
 var FUNC_ERROR_TEXT$1 = 'Expected a function';
@@ -663,11 +628,11 @@ function debounce(func, wait, options) {
   if (typeof func != 'function') {
     throw new TypeError(FUNC_ERROR_TEXT$1);
   }
-  wait = toNumber_1(wait) || 0;
-  if (isObject_1(options)) {
+  wait = toNumber(wait) || 0;
+  if (isObject(options)) {
     leading = !!options.leading;
     maxing = 'maxWait' in options;
-    maxWait = maxing ? nativeMax(toNumber_1(options.maxWait) || 0, wait) : maxWait;
+    maxWait = maxing ? nativeMax(toNumber(options.maxWait) || 0, wait) : maxWait;
     trailing = 'trailing' in options ? !!options.trailing : trailing;
   }
 
@@ -712,7 +677,7 @@ function debounce(func, wait, options) {
   }
 
   function timerExpired() {
-    var time = now_1();
+    var time = now$1();
     if (shouldInvoke(time)) {
       return trailingEdge(time);
     }
@@ -741,11 +706,11 @@ function debounce(func, wait, options) {
   }
 
   function flush() {
-    return timerId === undefined ? result : trailingEdge(now_1());
+    return timerId === undefined ? result : trailingEdge(now$1());
   }
 
   function debounced() {
-    var time = now_1(),
+    var time = now$1(),
         isInvoking = shouldInvoke(time);
 
     lastArgs = arguments;
@@ -772,8 +737,6 @@ function debounce(func, wait, options) {
   debounced.flush = flush;
   return debounced;
 }
-
-var debounce_1 = debounce;
 
 /** Error message constants. */
 var FUNC_ERROR_TEXT = 'Expected a function';
@@ -829,18 +792,16 @@ function throttle(func, wait, options) {
   if (typeof func != 'function') {
     throw new TypeError(FUNC_ERROR_TEXT);
   }
-  if (isObject_1(options)) {
+  if (isObject(options)) {
     leading = 'leading' in options ? !!options.leading : leading;
     trailing = 'trailing' in options ? !!options.trailing : trailing;
   }
-  return debounce_1(func, wait, {
+  return debounce(func, wait, {
     'leading': leading,
     'maxWait': wait,
     'trailing': trailing
   });
 }
-
-var throttle_1 = throttle;
 
 /*
  * @Author: yorshka
@@ -851,9 +812,23 @@ var throttle_1 = throttle;
  * 交互感知层
  */
 class Interaction {
-    // 监听目标元素
-    target;
     constructor(options) {
+        this.mouseMoveHandler = (e) => throttle((e) => {
+            const { offsetX, offsetY } = e;
+            // 发送事件
+            bus.namespace(Namespace.INTERACTION).emit(EventTypes.MOVE, {
+                x: offsetX,
+                y: offsetY,
+            });
+        }, 20)(e);
+        this.mouseDownHandler = (e) => {
+            const { offsetX, offsetY } = e;
+            // 发送事件
+            bus.namespace(Namespace.INTERACTION).emit(EventTypes.MOUSEDOWN, {
+                x: offsetX,
+                y: offsetY,
+            });
+        };
         this.target = options.target.canvasEle;
         this.init();
     }
@@ -867,22 +842,6 @@ class Interaction {
         this.target.addEventListener('mousedown', this.mouseDownHandler);
         this.target.addEventListener('mousemove', this.mouseMoveHandler);
     }
-    mouseMoveHandler = (e) => throttle_1((e) => {
-        const { offsetX, offsetY } = e;
-        // 发送事件
-        bus.namespace(Namespace.INTERACTION).emit(EventTypes.MOVE, {
-            x: offsetX,
-            y: offsetY,
-        });
-    }, 20)(e);
-    mouseDownHandler = (e) => {
-        const { offsetX, offsetY } = e;
-        // 发送事件
-        bus.namespace(Namespace.INTERACTION).emit(EventTypes.MOUSEDOWN, {
-            x: offsetX,
-            y: offsetY,
-        });
-    };
 }
 
 /*
@@ -895,13 +854,22 @@ class Interaction {
 function getCoveredGrid(x, y, radius, gridSize) {
     const list = [];
     // boundingBox三顶点： 左上，右上，左下
-    const lt = [x - radius < 0 ? 0 : x - radius, y - radius < 0 ? 0 : y - radius];
+    const lt = [
+        x - radius < 0 ? 0 : x - radius,
+        y - radius < 0 ? 0 : y - radius,
+    ];
     const rt = [x + radius, y - radius < 0 ? 0 : y - radius];
     const lb = [x - radius < 0 ? 0 : x - radius, y + radius];
     // console.log('x,y,radius', x, y, radius);
     // console.log('lt,rt,lb', lt, rt, lb);
-    const xAxis = [Math.floor(lt[0] / gridSize), Math.floor(rt[0] / gridSize)];
-    const yAxis = [Math.floor(lt[1] / gridSize), Math.floor(lb[1] / gridSize)];
+    const xAxis = [
+        Math.floor(lt[0] / gridSize),
+        Math.floor(rt[0] / gridSize),
+    ];
+    const yAxis = [
+        Math.floor(lt[1] / gridSize),
+        Math.floor(lb[1] / gridSize),
+    ];
     // console.log('xAxis,yAxis', xAxis, yAxis);
     for (let x = xAxis[0]; x <= xAxis[1]; x++) {
         for (let y = yAxis[0]; y <= yAxis[1]; y++) {
@@ -926,11 +894,20 @@ function getCoverArea(x, y, radius, gridSize) {
         height: 0,
     };
     // boundingBox三顶点： 左上，右上，左下
-    const lt = [x - radius < 0 ? 0 : x - radius, y - radius < 0 ? 0 : y - radius];
+    const lt = [
+        x - radius < 0 ? 0 : x - radius,
+        y - radius < 0 ? 0 : y - radius,
+    ];
     const rt = [x + radius, y - radius < 0 ? 0 : y - radius];
     const lb = [x - radius < 0 ? 0 : x - radius, y + radius];
-    const xAxis = [Math.floor(lt[0] / gridSize), Math.floor(rt[0] / gridSize)];
-    const yAxis = [Math.floor(lt[1] / gridSize), Math.floor(lb[1] / gridSize)];
+    const xAxis = [
+        Math.floor(lt[0] / gridSize),
+        Math.floor(rt[0] / gridSize),
+    ];
+    const yAxis = [
+        Math.floor(lt[1] / gridSize),
+        Math.floor(lb[1] / gridSize),
+    ];
     area.x = xAxis[0] * gridSize;
     area.y = yAxis[0] * gridSize;
     area.width = xAxis[1] * gridSize + gridSize - area.x;
@@ -946,22 +923,68 @@ function getCoverArea(x, y, radius, gridSize) {
  *
  * mesh实例，用来作为网格坐标层
  */
-class Mesh extends Canvas {
-    static instance;
-    // 缓冲数据集
-    shapeBucket;
-    // 格点缓存，以gridId为key，记录cover该grid的shape的list，shape按zindex倒序排
-    gridCache;
-    // mesh网格格子大小
-    gridSize;
+class Mesh extends VCanvas {
     constructor(options) {
         super(options);
+        // 缓冲数据集
+        this.shapeBucket = new Map();
+        // 格点缓存，以gridId为key，记录cover该grid的shape的list，shape按zindex倒序排
+        this.gridCache = new Map();
+        // mesh网格格子大小
+        this.gridSize = GRID_SIZE;
+        // 监听鼠标移动，计算当前hover shape
+        this.handleMouseMove = (point) => {
+            const grid = getMeshGrid(point.x, point.y, this.gridSize).join(':');
+            const cache = this.gridCache.get(grid);
+            if (cache) {
+                if (cache?.list?.length) {
+                    const shape = this.shapeBucket.get(cache.list[0]);
+                    bus.namespace(Namespace.INTERACTION).emit(EventTypes.HOVER, shape);
+                    return;
+                }
+            }
+            bus.namespace(Namespace.INTERACTION).emit(EventTypes.HOVER, null);
+        };
+        // 鼠标点击
+        this.handleMouseDown = (point) => {
+            const grid = getMeshGrid(point.x, point.y, this.gridSize).join(':');
+            // console.log('grid', grid);
+            const cache = this.gridCache.get(grid);
+            if (cache) {
+                if (cache?.list?.length) {
+                    // 此处可精细化处理：
+                    // 1. 缩小搜索范围，将list中shape重新按照zindex排序
+                    const shapeList = cache.list.map((i) => this.shapeBucket.get(i));
+                    shapeList.sort((a, b) => b.zIndex - a.zIndex);
+                    // 2. 精确计算被点击元素
+                    const len = shapeList.length;
+                    let target = shapeList[0];
+                    for (let i = 0; i < len; i++) {
+                        const shape = shapeList[i];
+                        const radius = getDistance(point.x, point.y, shape.x, shape.y);
+                        if (radius <= shape.radius) {
+                            target = shape;
+                            break;
+                        }
+                    }
+                    target.zIndex = shapeList[0].zIndex + 1;
+                    // 直接修改，不好吗？
+                    this.gridCache.get(grid).list = shapeList.map((i) => i.id);
+                    bus.namespace(Namespace.INTERACTION).emit(EventTypes.CLICK, target);
+                    return;
+                }
+            }
+        };
+        this.handleShapeReady = (shape) => {
+            console.log('shape ready', shape);
+            this.recordShape(shape);
+        };
         if (Mesh.instance) {
             return Mesh.instance;
         }
         // 初始化缓存
-        this.shapeBucket = new Map();
-        this.gridCache = new Map();
+        this.shapeBucket.clear();
+        this.gridCache.clear();
         // 记录格点大小
         this.gridSize = options.gridSize;
         // 初始化监听器
@@ -981,53 +1004,6 @@ class Mesh extends Canvas {
         // 鼠标点击事件
         bus.namespace(Namespace.INTERACTION).on(EventTypes.MOUSEDOWN, this.handleMouseDown);
     }
-    // 监听鼠标移动，计算当前hover shape
-    handleMouseMove = (point) => {
-        const grid = getMeshGrid(point.x, point.y, this.gridSize).join(':');
-        const cache = this.gridCache.get(grid);
-        if (cache) {
-            if (cache?.list?.length) {
-                const shape = this.shapeBucket.get(cache.list[0]);
-                bus.namespace(Namespace.INTERACTION).emit(EventTypes.HOVER, shape);
-                return;
-            }
-        }
-        bus.namespace(Namespace.INTERACTION).emit(EventTypes.HOVER, null);
-    };
-    // 鼠标点击
-    handleMouseDown = (point) => {
-        const grid = getMeshGrid(point.x, point.y, this.gridSize).join(':');
-        // console.log('grid', grid);
-        const cache = this.gridCache.get(grid);
-        if (cache) {
-            if (cache?.list?.length) {
-                // 此处可精细化处理：
-                // 1. 缩小搜索范围，将list中shape重新按照zindex排序
-                const shapeList = cache.list.map((i) => this.shapeBucket.get(i));
-                shapeList.sort((a, b) => b.zIndex - a.zIndex);
-                // 2. 精确计算被点击元素
-                const len = shapeList.length;
-                let target = shapeList[0];
-                for (let i = 0; i < len; i++) {
-                    const shape = shapeList[i];
-                    const radius = getDistance(point.x, point.y, shape.x, shape.y);
-                    if (radius <= shape.radius) {
-                        target = shape;
-                        break;
-                    }
-                }
-                target.zIndex = shapeList[0].zIndex + 1;
-                // 直接修改，不好吗？
-                this.gridCache.get(grid).list = shapeList.map((i) => i.id);
-                bus.namespace(Namespace.INTERACTION).emit(EventTypes.CLICK, target);
-                return;
-            }
-        }
-    };
-    handleShapeReady = (shape) => {
-        console.log('shape ready', shape);
-        this.recordShape(shape);
-    };
     // 录入图形，形成坐标
     recordShape(shape) {
         const { id } = shape;
@@ -1121,23 +1097,9 @@ class Mesh extends Canvas {
  * shape类型，用来储存需要被绘制的数据
  */
 class Shape {
-    // 唯一id
-    id;
-    // ellipse 类型参数
-    x;
-    y;
-    radius;
-    // 填充颜色
-    fillColor;
-    // cover到的grid的区域
-    coverArea;
-    // 格点大小
-    gridSize;
-    // 层级参数
-    zIndex;
-    // 自身格点缓存信息
-    meshGridList;
     constructor(options) {
+        // 自身格点缓存信息
+        this.meshGridList = [''];
         const { x, y, radius, zIndex } = options;
         //   保存原始数据
         this.x = x;
@@ -1215,39 +1177,53 @@ function getNextColor(color) {
 /*
  * @Author: yorshka
  * @Date: 2021-01-29 10:25:35
- * @Last Modified by: yorshka
- * @Last Modified time: 2021-02-01 11:41:44
+ * @Last Modified by: liuxikai.2021@bytedance.com
+ * @Last Modified time: 2022-04-02 23:57:44
  *
  * canvas demo.
  *
  */
 class Demo {
-    // 容器及实例
-    container;
-    width;
-    height;
-    // 粗粒化格子大小
-    gridSize = GRIDSIZE;
-    // 交互控制句柄，可取消监听器
-    interactionHandler;
-    /* 按层级排列 */
-    // 鼠标事件感知层
-    interactionLayer;
-    // 缓存层
-    cacheLayer = null;
-    // 主画布
-    displayLayer;
-    // 坐标层
-    meshLayer;
     constructor(options) {
+        // 粗粒化格子大小
+        this.gridSize = GRID_SIZE;
+        // 点击元素
+        this.clickHandler = (shape) => {
+            console.log('click', shape);
+            const { fillColor, meshGridList } = shape;
+            // 更新颜色
+            shape.setColor(getNextColor(fillColor));
+            // 更新位置
+            shape.levelUp();
+            // 1. 局部擦除
+            // 2. 按照zindex重绘被擦除的元素
+            // 建立局部刷新区域
+            // 待重绘shape
+            let reRenderShape = [];
+            // 记录待重绘元素
+            meshGridList.forEach((grid) => {
+                const cache = this.meshLayer.gridCache.get(grid);
+                if (cache) {
+                    reRenderShape = [...reRenderShape, ...cache.list];
+                }
+            });
+            console.log('clearArea', shape.coverArea);
+            reRenderShape = [...new Set([...reRenderShape])];
+            console.log('reRenderShape', reRenderShape);
+            // 擦除
+            this.clearGrid(shape.coverArea);
+            // 重绘
+            this.reRender(reRenderShape, shape);
+        };
         const { container: name } = options;
         const container = document.getElementById(name || 'container');
         // 保存容器
         this.container = container;
+        console.log('this.container', this.container, this.cacheLayer);
         this.width = container.clientWidth;
         this.height = container.clientHeight;
         // 鼠标动作感知图层
-        this.interactionLayer = new Canvas({
+        this.interactionLayer = new VCanvas({
             id: 'interaction',
             container,
             zIndex: 4,
@@ -1261,7 +1237,7 @@ class Demo {
             });
         }
         // 主画布
-        this.displayLayer = new Canvas({
+        this.displayLayer = new VCanvas({
             id: 'main',
             container,
             zIndex: 2,
@@ -1300,44 +1276,16 @@ class Demo {
         // EventBus.namespace(Namespace.INTERACTION).remove(EventTypes.MOVE);
         // EventBus.namespace(Namespace.INTERACTION).remove(EventTypes.HOVER);
     }
-    // 点击元素
-    clickHandler = (shape) => {
-        console.log('click', shape);
-        const { fillColor, meshGridList } = shape;
-        // 更新颜色
-        shape.setColor(getNextColor(fillColor));
-        // 更新位置
-        shape.levelUp();
-        // 1. 局部擦除
-        // 2. 按照zindex重绘被擦除的元素
-        // 建立局部刷新区域
-        // 待重绘shape
-        let reRenderShape = [];
-        // 记录待重绘元素
-        meshGridList.forEach((grid) => {
-            const cache = this.meshLayer.gridCache.get(grid);
-            if (cache) {
-                reRenderShape = [...reRenderShape, ...cache.list];
-            }
-        });
-        console.log('clearArea', shape.coverArea);
-        reRenderShape = [...new Set([...reRenderShape])];
-        console.log('reRenderShape', reRenderShape);
-        // 擦除
-        this.clearGrid(shape.coverArea);
-        // 重绘
-        this.reRender(reRenderShape, shape);
-    };
     // 局部擦除
     clearGrid(area) {
-        this.getCtx().clearRect(area.x, area.y, area.width, area.height);
+        this.getCtx()?.clearRect(area.x, area.y, area.width, area.height);
     }
     // 局部重绘
     reRender(list, targetShape) {
         // targetShape最后render
         // 按zindex顺序绘制
         const shapeList = list.map((id) => this.meshLayer.shapeBucket.get(id));
-        shapeList.sort((a, b) => b.zIndex - a.zIndex);
+        shapeList.sort((a, b) => b?.zIndex - a?.zIndex);
         // console.log('shapeList', shapeList);
         const ctx = this.getCtx();
         shapeList.forEach((shape) => {

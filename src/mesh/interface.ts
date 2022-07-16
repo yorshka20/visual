@@ -5,10 +5,12 @@
  * @Last Modified time: 2021-01-30 18:56:51
  */
 
-import { CanvasOptions } from '@src/canvas/interface';
-
-export interface MeshOptions extends CanvasOptions {
+export interface MeshOptions {
+  id: string;
   gridSize: number;
+  container: HTMLElement;
+  zIndex: number; // z轴层级，用来隔离多层canvas
+  hide?: boolean; // 是否不展示，缓存及非主画布为hide
 }
 
 export interface BoundingBoxData {

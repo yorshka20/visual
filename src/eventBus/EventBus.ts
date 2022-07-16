@@ -34,9 +34,9 @@ export default class EventBus {
     return this._instance;
   }
 
-  private defaultNamespace: string;
+  private defaultNamespace: string = '';
 
-  private namespaceCache: Map<string, Namespace>;
+  private namespaceCache: Map<string, Namespace> = new Map();
 
   constructor() {
     if (EventBus._instance) {
@@ -50,16 +50,14 @@ export default class EventBus {
   }
 
   public clean(): void {
-    this.namespaceCache = null;
-
-    EventBus._instance = null;
+    this.namespaceCache.clear();
   }
 
   public namespace(inputName: string): Namespace {
     const name = inputName || this.defaultNamespace; // 命名空间
 
     if (this.namespaceCache?.get(name)) {
-      return this.namespaceCache.get(name);
+      return this.namespaceCache.get(name)!;
     }
 
     const namespace: Namespace = {
@@ -87,7 +85,7 @@ export default class EventBus {
   }
 
   // 监听一个事件
-  private on = function (name: string, key: string, fn: EventHandler): void {
+  private on = (name: string, key: string, fn: EventHandler) => {
     const namespace = this.namespaceCache?.get(name);
     if (!namespace) {
       return;
@@ -97,15 +95,11 @@ export default class EventBus {
     if (!cache[key]) {
       cache[key] = [];
     }
-    cache[key].push(fn);
+    cache[key]!.push(fn);
   };
 
   // 移除一个事件。如果fn为空，则清空该事件下的所有事件
-  private remove = function (
-    name: string,
-    key: string,
-    fn?: EventHandler
-  ): void {
+  private remove = (name: string, key: string, fn?: EventHandler) => {
     const namespace = this.namespaceCache?.get(name);
     if (!namespace) {
       return;
@@ -114,9 +108,9 @@ export default class EventBus {
     const cache = namespace.eventBucket;
     if (cache[key]) {
       if (fn) {
-        for (let i = cache[key].length; i >= 0; i--) {
-          if (cache[key][i] === fn) {
-            cache[key].splice(i, 1);
+        for (let i = cache[key]!.length; i >= 0; i--) {
+          if (cache[key]![i] === fn) {
+            cache[key]!.splice(i, 1);
           }
         }
       } else {

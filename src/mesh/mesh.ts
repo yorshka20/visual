@@ -7,25 +7,25 @@
  * mesh实例，用来作为网格坐标层
  */
 
-import { Canvas } from '@src/canvas';
-import { SHOW_MESH_POINT, SHOW_SHAPE_GRID } from '@src/config';
+import { VCanvas } from '@src/canvas';
+import { GRID_SIZE, SHOW_MESH_POINT, SHOW_SHAPE_GRID } from '@src/config';
 import { EventBus, EventTypes, Namespace } from '@src/eventBus';
-import { Shape } from '@src/shape';
+import type { Shape } from '@src/shape';
 import { getMeshGrid } from '@src/shape/utils';
-import { MeshOptions, GridCacheList, Point } from './interface';
+import type { MeshOptions, GridCacheList, Point } from './interface';
 import { getDistance } from './utils';
 
-export default class Mesh extends Canvas {
+export default class Mesh extends VCanvas {
   static instance: Mesh;
 
   // 缓冲数据集
-  shapeBucket: Map<string, Shape>;
+  shapeBucket: Map<string, Shape> = new Map();
 
   // 格点缓存，以gridId为key，记录cover该grid的shape的list，shape按zindex倒序排
-  gridCache: Map<string, GridCacheList>;
+  gridCache: Map<string, GridCacheList> = new Map();
 
   // mesh网格格子大小
-  gridSize: number;
+  gridSize: number = GRID_SIZE;
 
   constructor(options: MeshOptions) {
     super(options);
@@ -35,8 +35,8 @@ export default class Mesh extends Canvas {
     }
 
     // 初始化缓存
-    this.shapeBucket = new Map<string, any>();
-    this.gridCache = new Map<string, GridCacheList>();
+    this.shapeBucket.clear();
+    this.gridCache.clear();
 
     // 记录格点大小
     this.gridSize = options.gridSize;
@@ -79,7 +79,7 @@ export default class Mesh extends Canvas {
     const cache = this.gridCache.get(grid);
     if (cache) {
       if (cache?.list?.length) {
-        const shape = this.shapeBucket.get(cache.list[0]);
+        const shape = this.shapeBucket.get(cache.list[0]!);
         EventBus.namespace(Namespace.INTERACTION).emit(EventTypes.HOVER, shape);
         return;
       }
@@ -97,14 +97,14 @@ export default class Mesh extends Canvas {
       if (cache?.list?.length) {
         // 此处可精细化处理：
         // 1. 缩小搜索范围，将list中shape重新按照zindex排序
-        const shapeList = cache.list.map((i) => this.shapeBucket.get(i));
+        const shapeList = cache.list.map((i) => this.shapeBucket.get(i)!);
         shapeList.sort((a, b) => b.zIndex - a.zIndex);
 
         // 2. 精确计算被点击元素
         const len = shapeList.length;
-        let target = shapeList[0];
+        let target = shapeList[0]!;
         for (let i = 0; i < len; i++) {
-          const shape = shapeList[i];
+          const shape = shapeList[i]!;
           const radius = getDistance(point.x, point.y, shape.x, shape.y);
           if (radius <= shape.radius) {
             target = shape;
@@ -112,10 +112,10 @@ export default class Mesh extends Canvas {
           }
         }
 
-        target.zIndex = shapeList[0].zIndex + 1;
+        target.zIndex = shapeList[0]!.zIndex + 1;
 
         // 直接修改，不好吗？
-        this.gridCache.get(grid).list = shapeList.map((i) => i.id);
+        this.gridCache.get(grid)!.list = shapeList.map((i) => i.id);
 
         EventBus.namespace(Namespace.INTERACTION).emit(
           EventTypes.CLICK,
@@ -153,7 +153,7 @@ export default class Mesh extends Canvas {
       if (cache) {
         cache.list = cache.list.filter((i) => i != id);
         if (cache.topIndex == zIndex && cache.list.length) {
-          const topShape = this.shapeBucket.get(cache.list[0]);
+          const topShape = this.shapeBucket.get(cache.list[0]!)!;
           cache.topIndex = topShape.zIndex;
         }
 
@@ -195,7 +195,7 @@ export default class Mesh extends Canvas {
 
   // 辅助方法：渲染格子
   private fillGrid(grid: string) {
-    const [x, y] = grid.split(':').map((i) => Number(i));
+    const [x, y] = grid.split(':').map((i) => Number(i)) as [number, number];
     this.ctx.fillStyle = '#666';
     this.ctx.fillRect(
       x * this.gridSize,

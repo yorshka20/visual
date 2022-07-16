@@ -7,13 +7,12 @@
  * 交互感知层
  */
 
-import { Canvas } from '@src/canvas';
+import type { VCanvas } from '@src/canvas';
 import { EventBus, EventTypes, Namespace } from '@src/eventBus';
-import { Mesh } from '@src/mesh';
 import { throttle } from 'lodash-es';
 
 interface InteractionOptions {
-  target: Canvas;
+  target: VCanvas;
 }
 
 export default class Interaction {
