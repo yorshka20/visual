@@ -29,3 +29,5 @@ shapeList.forEach((shape) => {
 window.onunload = () => {
   demo.destroy();
 };
+
+console.log('1');

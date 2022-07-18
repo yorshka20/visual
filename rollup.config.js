@@ -3,8 +3,9 @@ import resolve from 'rollup-plugin-node-resolve';
 import cjs from 'rollup-plugin-commonjs';
 import typescript from 'rollup-plugin-typescript2';
 import livereload from 'rollup-plugin-livereload';
-import serve from 'rollup-plugin-serve';
 import html from 'rollup-plugin-gen-html';
+import dev from 'rollup-plugin-dev';
+import serve from 'rollup-plugin-serve';
 
 function getPlugins() {
   const plugins = [
@@ -28,13 +29,12 @@ function getPlugins() {
       target: './dist/index.html',
       hash: false,
     }),
-    livereload({
-      watch: 'src',
-    }),
+    livereload('dist'),
     serve({
-      open: true,
+      open: true, // 自动打开页面
       port: 5000,
-      openPage: 'index.html',
+      openPage: 'index.html', // 打开的页面
+      dirs: ['dist'],
     }),
   ];
 
