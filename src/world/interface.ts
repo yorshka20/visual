@@ -5,6 +5,6 @@
  * @Last Modified time: 2021-01-30 21:18:01
  */
 
-export interface DemoOptions {
+export interface WorldOptions {
   container: string;
 }

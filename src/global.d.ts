@@ -1,3 +1,3 @@
 declare interface Window {
-  demo: any;
+  world: any;
 }

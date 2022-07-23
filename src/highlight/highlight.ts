@@ -18,7 +18,7 @@ interface HighlightOptions extends VCanvasOptions {
 }
 
 export default class Highlight extends VCanvas {
-  private _target: Shape | undefined; // hover shape id
+  private _target: Shape | undefined = undefined; // hover shape id
 
   private get hoverTarget() {
     return this._target!;
@@ -42,8 +42,6 @@ export default class Highlight extends VCanvas {
 
     //   设置高亮stroke颜色
     this.ctx!.strokeStyle = '#00FF00';
-
-    this._target = undefined;
 
     //   初始化监听器
     this.init();

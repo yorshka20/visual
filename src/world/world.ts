@@ -4,7 +4,12 @@
  * @Last Modified by: liuxikai.2021@bytedance.com
  * @Last Modified time: 2022-04-02 23:57:44
  *
- * canvas demo.
+ * canvas World.
+ *
+ * World的职责是什么？
+ * - 创建世界
+ * - 对外提供对世界的控制api
+ *
  *
  */
 
@@ -15,10 +20,10 @@ import { Highlight } from '@src/highlight';
 import { Interaction } from '@src/interaction';
 import { Mesh } from '@src/mesh';
 import { CoverArea, Shape } from '@src/shape';
-import type { DemoOptions } from './interface';
+import type { WorldOptions } from './interface';
 import { getNextColor } from './utils';
 
-export default class Demo {
+export default class World {
   // 容器及实例
   private container: HTMLElement | null;
 
@@ -42,7 +47,7 @@ export default class Demo {
   // 坐标层
   private meshLayer: Mesh;
 
-  constructor(options: DemoOptions) {
+  constructor(options: WorldOptions) {
     const { container: name } = options;
 
     const container = document.getElementById(
