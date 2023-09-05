@@ -12,29 +12,25 @@ function getPlugins() {
       tsconfig: './tsconfig.json',
       clean: true,
     }),
-    // 支持代码中引用的 node_modules 中的文件
+    // resolve node_modules and native
     resolve({
       module: true,
       jsnext: true,
       main: true,
       browser: true,
     }),
-    // 支持代码中引用 CommonJS 规格的模块
+    // support cmj module in node_modules
     cjs({
       include: ['node_modules/**'],
     }),
     html({
-      template: 'index.html',
+      template: 'public/index.html',
       target: './dist/index.html',
       hash: false,
+      script: './dist/bundle.js',
     }),
     livereload('dist'),
-    serve({
-      open: true, // 自动打开页面
-      port: 3000,
-      openPage: 'index.html', // 打开的页面
-      dirs: ['dist'],
-    }),
+    serve('dist'),
   ];
 
   return plugins;

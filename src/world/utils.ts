@@ -1,8 +1,6 @@
 /*
  * @Author: yorshka
  * @Date: 2021-01-30 20:58:08
- * @Last Modified by: yorshka
- * @Last Modified time: 2021-01-30 21:00:28
  */
 
 import { COLOR_SET } from '@src/config';

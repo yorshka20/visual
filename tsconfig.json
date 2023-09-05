@@ -4,7 +4,7 @@
   "compilerOptions": {
     "lib": ["es2021", "dom"],
     "module": "ESNext",
-    "target": "es2021",
+    "target": "ESNext",
     "strict": true,
     "alwaysStrict": false,
     "esModuleInterop": true,
@@ -19,9 +19,8 @@
     "noImplicitReturns": true,
     "noPropertyAccessFromIndexSignature": true,
     "noUncheckedIndexedAccess": true,
-    "noUnusedLocals": true,
+    "noUnusedLocals": false,
     "noUnusedParameters": true,
-    "importsNotUsedAsValues": "error",
     "checkJs": true,
 
     "baseUrl": "./",

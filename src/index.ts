@@ -1,35 +1,29 @@
 /*
  * @Author: yorshka
  * @Date: 2021-01-29 22:19:49
- * @Last Modified by: yorshka
- * @Last Modified time: 2021-01-30 21:16:48
  *
- * world: 数百个圆，随机排布，可被鼠标点击。点击后变色并置于顶层，其他圆的绘制顺序不变。
+ * world: hundreds of circle overlapping with each other. supporting mouse detecting and interacting.
  */
 
 import { World } from './world';
 
-// 新建world实例
+// 1. create world
 const world = new World({
   container: 'container',
 });
 
 window.world = world;
 
-// 生成图形
+// 2. generate shape
 const shapeList = world.generateShape(120);
 
-// 渲染图像
+// 3. render the scene
 const ctx = world.getCtx();
 shapeList.forEach((shape) => {
   shape.render(ctx);
 });
 
-// 退出时销毁实例
+// destroy when refresh
 window.onunload = () => {
   world.destroy();
 };
-
-console.log('1');
-
-// 暂时不需要考虑 react 写组件吧，直接弄点 canvas 渲染即可

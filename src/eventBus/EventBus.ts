@@ -5,7 +5,7 @@
  * @Last Modified time: 2021-01-29 23:52:35
  *
  * EventBus 工具类
- * 需要从全局作用域iife重构为class，否则会导致无法追踪的匿名监听器残留
+ *
  */
 
 interface Namespace {

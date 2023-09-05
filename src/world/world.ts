@@ -1,15 +1,22 @@
 /*
  * @Author: yorshka
  * @Date: 2021-01-29 10:25:35
- * @Last Modified by: liuxikai.2021@bytedance.com
- * @Last Modified time: 2022-04-02 23:57:44
  *
  * canvas World.
  *
- * World的职责是什么？
- * - 创建世界
- * - 对外提供对世界的控制api
+ * Duty of world:
+ * - create world
+ * - export control api
  *
+ * what api do we need?
+ * - start
+ * - restart
+ * - stop
+ * - pause
+ *
+ * more advanced:
+ * - tick
+ * - nextTick
  *
  */
 
@@ -25,10 +32,10 @@ import { getNextColor } from './utils';
 
 export default class World {
   // 容器及实例
-  private container: HTMLElement | null;
+  private container: HTMLElement;
 
+  // 基本的宽高
   private width: number;
-
   private height: number;
 
   // 粗粒化格子大小
@@ -41,7 +48,7 @@ export default class World {
   // 鼠标事件感知层
   private interactionLayer: VCanvas;
   // 缓存层
-  private cacheLayer: VCanvas | undefined;
+  private cacheLayer: VCanvas = {} as any;
   // 主画布
   private displayLayer: VCanvas;
   // 坐标层
@@ -55,8 +62,6 @@ export default class World {
     ) as HTMLElement;
     // 保存容器
     this.container = container;
-
-    console.log('this.container', this.container, this.cacheLayer);
 
     this.width = container.clientWidth;
     this.height = container.clientHeight;
