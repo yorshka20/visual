@@ -2,7 +2,7 @@
  * @Author: yorshka
  * @Date: 2021-01-29 23:38:02
  *
- * 交互感知层
+ * interaction handles the mouse actions.
  */
 
 import type { VCanvas } from '@src/canvas';
@@ -14,7 +14,7 @@ interface InteractionOptions {
 }
 
 export default class Interaction {
-  // 监听目标元素
+  // listening object
   private target: HTMLCanvasElement;
 
   constructor(options: InteractionOptions) {
@@ -23,13 +23,11 @@ export default class Interaction {
     this.init();
   }
 
-  // 销毁
   public destroy(): void {
     this.target.removeEventListener('mousedown', this.mouseDownHandler);
     this.target.removeEventListener('mousemove', this.mouseMoveHandler);
   }
 
-  // 挂载监听器
   public init(): void {
     this.target.addEventListener('mousedown', this.mouseDownHandler);
     this.target.addEventListener('mousemove', this.mouseMoveHandler);
@@ -38,7 +36,7 @@ export default class Interaction {
   private mouseMoveHandler = (e: MouseEvent) =>
     throttle((e: MouseEvent) => {
       const { offsetX, offsetY } = e;
-      // 发送事件
+
       EventBus.namespace(Namespace.INTERACTION).emit(EventTypes.MOVE, {
         x: offsetX,
         y: offsetY,
@@ -47,7 +45,7 @@ export default class Interaction {
 
   private mouseDownHandler = (e: MouseEvent) => {
     const { offsetX, offsetY } = e;
-    // 发送事件
+
     EventBus.namespace(Namespace.INTERACTION).emit(EventTypes.MOUSEDOWN, {
       x: offsetX,
       y: offsetY,

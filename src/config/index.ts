@@ -12,6 +12,3 @@ export const SHOW_SHAPE_GRID = false;
 
 // 是否渲染高亮框
 export const SHOW_HIGHLIGHT = true;
-
-// 点击变色色列
-export const COLOR_SET: string[] = ['#FF0000', '#EE0000', '#CD0000', '#8B0000'];

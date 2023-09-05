@@ -106,15 +106,16 @@ export default class EventBus {
     }
 
     const cache = namespace.eventBucket;
-    if (cache[key]) {
-      if (fn) {
-        for (let i = cache[key]!.length; i >= 0; i--) {
-          if (cache[key]![i] === fn) {
-            cache[key]!.splice(i, 1);
-          }
-        }
-      } else {
-        cache[key] = [];
+    if (!cache[key]) {
+      return;
+    }
+    if (!fn) {
+      cache[key] = [];
+      return;
+    }
+    for (let i = cache[key]!.length; i >= 0; i--) {
+      if (cache[key]![i] === fn) {
+        cache[key]!.splice(i, 1);
       }
     }
   };

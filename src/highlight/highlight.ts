@@ -41,7 +41,7 @@ export default class Highlight extends VCanvas {
     super(options);
 
     //   设置高亮stroke颜色
-    this.ctx!.strokeStyle = '#00FF00';
+    this.ctx.strokeStyle = '#00FF00';
 
     //   初始化监听器
     this.init();
@@ -70,10 +70,10 @@ export default class Highlight extends VCanvas {
   private drawHighlight(shape: Shape): void {
     const rect = computeBoundingBox(shape);
 
-    this.ctx!.strokeRect(rect.x, rect.y, rect.width, rect.height);
+    this.ctx.strokeRect(rect.x, rect.y, rect.width, rect.height);
   }
 
   private clean(): void {
-    this.ctx!.clearRect(0, 0, this.width, this.height);
+    this.ctx.clearRect(0, 0, this.width, this.height);
   }
 }

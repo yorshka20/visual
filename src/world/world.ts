@@ -132,22 +132,23 @@ export default class World {
     // EventBus.namespace(Namespace.INTERACTION).remove(EventTypes.HOVER);
   }
 
-  // 点击元素
+  // click element
   private clickHandler = (shape: Shape) => {
     console.log('click', shape);
     const { fillColor, meshGridList } = shape;
-    // 更新颜色
-    shape.setColor(getNextColor(fillColor));
-    // 更新位置
+    const nextColor = getNextColor(fillColor);
+    // update color
+    shape.setColor(nextColor);
+    // update position
     shape.levelUp();
 
-    // 1. 局部擦除
-    // 2. 按照zindex重绘被擦除的元素
+    // 1. erase partially
+    // 2. rerendering erased elements by z-index
 
-    // 建立局部刷新区域
-    // 待重绘shape
+    // create area to be erased and rerendered
+    // waiting to repaint
     let reRenderShape: string[] = [];
-    // 记录待重绘元素
+    // collect elements to be repainted
     meshGridList.forEach((grid) => {
       const cache = this.meshLayer.gridCache.get(grid);
       if (cache) {
@@ -158,9 +159,8 @@ export default class World {
     console.log('clearArea', shape.coverArea);
     reRenderShape = [...new Set([...reRenderShape])];
     console.log('reRenderShape', reRenderShape);
-    // 擦除
+
     this.clearGrid(shape.coverArea);
-    // 重绘
     this.reRender(reRenderShape, shape);
   };
 
@@ -196,7 +196,7 @@ export default class World {
   }
 
   public getCtx(): CanvasRenderingContext2D {
-    return this.displayLayer.ctx!;
+    return this.displayLayer.ctx;
   }
 
   // 生成count个随机shape

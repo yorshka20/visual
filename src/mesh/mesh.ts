@@ -102,7 +102,7 @@ export default class Mesh extends VCanvas {
 
         // 2. 精确计算被点击元素
         const len = shapeList.length;
-        let target = shapeList[0]!;
+        let target = shapeList[0] as Shape;
         for (let i = 0; i < len; i++) {
           const shape = shapeList[i]!;
           const radius = getDistance(point.x, point.y, shape.x, shape.y);
@@ -112,10 +112,9 @@ export default class Mesh extends VCanvas {
           }
         }
 
-        target.zIndex = shapeList[0]!.zIndex + 1;
+        const originalFirstShape = shapeList[0] as Shape;
 
-        // 直接修改，不好吗？
-        this.gridCache.get(grid)!.list = shapeList.map((i) => i.id);
+        target.zIndex = originalFirstShape.zIndex + 1;
 
         EventBus.namespace(Namespace.INTERACTION).emit(
           EventTypes.CLICK,

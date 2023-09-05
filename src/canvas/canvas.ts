@@ -54,15 +54,15 @@ export default class VCanvas {
     this.ctx = canvas.getContext('2d')!;
 
     // 设置层叠顺序
-    this.ctx!.globalCompositeOperation = 'source-over';
+    this.ctx.globalCompositeOperation = 'source-over';
 
     // 初始化stroke样式(default)
-    this.ctx!.lineWidth = 1;
-    this.ctx!.strokeStyle = '#000';
+    this.ctx.lineWidth = 1;
+    this.ctx.strokeStyle = '#000';
 
     //   mount canvas element
     if (!hide) {
-      this.container!.appendChild(canvas);
+      this.container.appendChild(canvas);
     }
   }
 }
