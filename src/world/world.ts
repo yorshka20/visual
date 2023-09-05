@@ -20,13 +20,13 @@
  *
  */
 
-import { VCanvas } from '@src/canvas';
-import { GRID_SIZE, SHOW_HIGHLIGHT, SHOW_MESH } from '@src/config';
-import { EventBus, EventTypes, Namespace } from '@src/eventBus';
-import { Highlight } from '@src/highlight';
-import { Interaction } from '@src/interaction';
-import { Mesh } from '@src/mesh';
-import { CoverArea, Shape } from '@src/shape';
+import { VCanvas } from '../canvas';
+import { GRID_SIZE, SHOW_HIGHLIGHT, SHOW_MESH } from '../config';
+import { EventBus, EventTypes, Namespace } from '../eventBus';
+import { Highlight } from '../highlight';
+import { Interaction } from '../interaction';
+import { Mesh } from '../mesh';
+import { CoverArea, Shape } from '../shape';
 import type { WorldOptions } from './interface';
 import { getNextColor } from './utils';
 

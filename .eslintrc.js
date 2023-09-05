@@ -12,15 +12,12 @@ module.exports = {
     ecmaFeatures: {
       jsx: true,
     },
-    ecmaVersion: 2018,
+    ecmaVersion: 2023,
     sourceType: 'module',
   },
   plugins: ['@typescript-eslint'],
   settings: {
     'import/resolver': {
-      alias: {
-        map: [['@src/*', './src/*']],
-      },
       node: {
         extensions: ['.js', '.jsx', '.ts', '.tsx'],
       },

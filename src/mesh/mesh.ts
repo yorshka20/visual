@@ -7,11 +7,11 @@
  * mesh实例，用来作为网格坐标层
  */
 
-import { VCanvas } from '@src/canvas';
-import { GRID_SIZE, SHOW_MESH_POINT, SHOW_SHAPE_GRID } from '@src/config';
-import { EventBus, EventTypes, Namespace } from '@src/eventBus';
-import type { Shape } from '@src/shape';
-import { getMeshGrid } from '@src/shape/utils';
+import { VCanvas } from '../canvas';
+import { GRID_SIZE, SHOW_MESH_POINT, SHOW_SHAPE_GRID } from '../config';
+import { EventBus, EventTypes, Namespace } from '../eventBus';
+import type { Shape } from '../shape';
+import { getMeshGrid } from '../shape/utils';
 import type { MeshOptions, GridCacheList, Point } from './interface';
 import { getDistance } from './utils';
 

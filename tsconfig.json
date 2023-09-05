@@ -21,13 +21,7 @@
     "noUncheckedIndexedAccess": true,
     "noUnusedLocals": false,
     "noUnusedParameters": true,
-    "checkJs": true,
-
-    "baseUrl": "./",
-
-    "paths": {
-      "@src/*": ["src/*"]
-    }
+    "checkJs": true
   },
   "include": ["src"],
   "exclude": ["node_modules", "dist"]

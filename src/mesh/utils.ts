@@ -5,7 +5,7 @@
  * @Last Modified time: 2021-01-31 14:56:49
  */
 
-import type { Shape } from '@src/shape';
+import type { Shape } from '../shape';
 import { BoundingBox } from './interface';
 
 // 返回一个矩形

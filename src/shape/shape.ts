@@ -7,8 +7,8 @@
  * shape类型，用来储存需要被绘制的数据
  */
 
-import { EventBus, EventTypes, Namespace } from '@src/eventBus';
-import { Mesh } from '@src/mesh';
+import { EventBus, EventTypes, Namespace } from '../eventBus';
+import { Mesh } from '../mesh';
 import { getCoverArea, getCoveredGrid } from './utils';
 import type { ShapeOptions, CoverArea } from './interface';
 

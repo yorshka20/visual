@@ -5,8 +5,8 @@
  * interaction handles the mouse actions.
  */
 
-import type { VCanvas } from '@src/canvas';
-import { EventBus, EventTypes, Namespace } from '@src/eventBus';
+import type { VCanvas } from '../canvas';
+import { EventBus, EventTypes, Namespace } from '../eventBus';
 import { throttle } from 'lodash-es';
 
 interface InteractionOptions {

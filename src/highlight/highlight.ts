@@ -7,11 +7,11 @@
  * 高亮层，绘制鼠标感知状态
  */
 
-import { VCanvas } from '@src/canvas';
-import type { VCanvasOptions } from '@src/canvas/interface';
-import { EventBus, EventTypes, Namespace } from '@src/eventBus';
-import { computeBoundingBox } from '@src/mesh/utils';
-import type { Shape } from '@src/shape';
+import { VCanvas } from '../canvas';
+import type { VCanvasOptions } from '../canvas/interface';
+import { EventBus, EventTypes, Namespace } from '../eventBus';
+import { computeBoundingBox } from '../mesh/utils';
+import type { Shape } from '../shape';
 
 interface HighlightOptions extends VCanvasOptions {
   //
