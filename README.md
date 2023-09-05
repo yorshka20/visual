@@ -4,22 +4,26 @@
 
 visual demo.
 
+a simple implementation of interactive canvas rendering board.
+
+![preview](./images/visual-preview.png)
+
+preview at: https://visual-drab.vercel.app/
+
 ### start
 
 ```bash
-yarn
+pnpm i
 
-yarn start
+pnpm start
 ```
 
-and visit http://localhost:5000
+and visit dev server according to terminal info.
 
-**or**
-
-just open index.html in browser.
+generally it will be in localhost:3000
 
 ### build
 
 ```bash
-yarn build
+pnpm build
 ```

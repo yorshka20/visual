@@ -1,11 +1,10 @@
 // rollup.config.js
-import resolve from 'rollup-plugin-node-resolve';
 import cjs from 'rollup-plugin-commonjs';
-import typescript from 'rollup-plugin-typescript2';
-import livereload from 'rollup-plugin-livereload';
 import html from 'rollup-plugin-gen-html';
-import dev from 'rollup-plugin-dev';
+import livereload from 'rollup-plugin-livereload';
+import resolve from 'rollup-plugin-node-resolve';
 import serve from 'rollup-plugin-serve';
+import typescript from 'rollup-plugin-typescript2';
 
 function getPlugins() {
   const plugins = [
@@ -32,7 +31,7 @@ function getPlugins() {
     livereload('dist'),
     serve({
       open: true, // 自动打开页面
-      // port: 5000,
+      port: 3000,
       openPage: 'index.html', // 打开的页面
       dirs: ['dist'],
     }),
