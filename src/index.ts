@@ -7,7 +7,7 @@
  * world: 数百个圆，随机排布，可被鼠标点击。点击后变色并置于顶层，其他圆的绘制顺序不变。
  */
 
-import { World } from './demo';
+import { World } from './world';
 
 // 新建world实例
 const world = new World({

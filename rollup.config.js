@@ -32,7 +32,7 @@ function getPlugins() {
     livereload('dist'),
     serve({
       open: true, // 自动打开页面
-      port: 5000,
+      // port: 5000,
       openPage: 'index.html', // 打开的页面
       dirs: ['dist'],
     }),
