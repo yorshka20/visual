@@ -1,10 +1,3 @@
-/*
- * @Author: yorshka
- * @Date: 2021-01-30 15:08:51
- * @Last Modified by: yorshka
- * @Last Modified time: 2021-01-30 22:00:05
- */
-
 import type { CoverArea } from './index';
 
 type PosCell = [number, number];
@@ -14,7 +7,7 @@ export function getCoveredGrid(
   x: number,
   y: number,
   radius: number,
-  gridSize: number
+  gridSize: number,
 ): string[] {
   const list = [];
 
@@ -64,7 +57,7 @@ export function getCoverArea(
   x: number,
   y: number,
   radius: number,
-  gridSize: number
+  gridSize: number,
 ): CoverArea {
   const area: CoverArea = {
     x: 0,

@@ -1,12 +1,3 @@
-/*
- * @Author: yorshka
- * @Date: 2021-01-29 22:43:14
- * @Last Modified by: yorshka
- * @Last Modified time: 2021-01-30 17:26:28
- *
- * 自定义canvas类型，大小与容器一致
- */
-
 import type { VCanvasOptions } from './interface';
 
 export default class VCanvas {

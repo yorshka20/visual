@@ -1,16 +1,7 @@
-/*
- * @Author: yorshka
- * @Date: 2021-01-29 23:04:21
- * @Last Modified by: yorshka
- * @Last Modified time: 2021-01-31 13:28:16
- *
- * shape类型，用来储存需要被绘制的数据
- */
-
 import { EventBus, EventTypes, Namespace } from '../eventBus';
 import { Mesh } from '../mesh';
+import type { CoverArea, ShapeOptions } from './interface';
 import { getCoverArea, getCoveredGrid } from './utils';
-import type { ShapeOptions, CoverArea } from './interface';
 
 export default class Shape {
   // 唯一id
@@ -72,7 +63,7 @@ export default class Shape {
         this.x,
         this.y,
         this.radius,
-        this.gridSize
+        this.gridSize,
       );
 
       // 记录cover区域，用于局部擦除

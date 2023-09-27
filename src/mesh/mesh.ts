@@ -1,18 +1,9 @@
-/*
- * @Author: yorshka
- * @Date: 2021-01-29 22:34:19
- * @Last Modified by: yorshka
- * @Last Modified time: 2021-01-31 16:08:25
- *
- * mesh实例，用来作为网格坐标层
- */
-
 import { VCanvas } from '../canvas';
 import { GRID_SIZE, SHOW_MESH_POINT, SHOW_SHAPE_GRID } from '../config';
 import { EventBus, EventTypes, Namespace } from '../eventBus';
 import type { Shape } from '../shape';
 import { getMeshGrid } from '../shape/utils';
-import type { MeshOptions, GridCacheList, Point } from './interface';
+import type { GridCacheList, MeshOptions, Point } from './interface';
 import { getDistance } from './utils';
 
 export default class Mesh extends VCanvas {
@@ -57,19 +48,19 @@ export default class Mesh extends VCanvas {
     // shape初始化事件
     EventBus.namespace(Namespace.INIT).on(
       EventTypes.SHAPE,
-      this.handleShapeReady
+      this.handleShapeReady,
     );
 
     // 鼠标移动事件
     EventBus.namespace(Namespace.INTERACTION).on(
       EventTypes.MOVE,
-      this.handleMouseMove
+      this.handleMouseMove,
     );
 
     // 鼠标点击事件
     EventBus.namespace(Namespace.INTERACTION).on(
       EventTypes.MOUSEDOWN,
-      this.handleMouseDown
+      this.handleMouseDown,
     );
   }
 
@@ -118,7 +109,7 @@ export default class Mesh extends VCanvas {
 
         EventBus.namespace(Namespace.INTERACTION).emit(
           EventTypes.CLICK,
-          target
+          target,
         );
         return;
       }
@@ -200,7 +191,7 @@ export default class Mesh extends VCanvas {
       x * this.gridSize,
       y * this.gridSize,
       this.gridSize,
-      this.gridSize
+      this.gridSize,
     );
   }
 
@@ -248,7 +239,7 @@ export default class Mesh extends VCanvas {
             ctx.strokeText(
               `(${(x + xOffset) / gridSize},${(y + yOffset) / gridSize})`,
               x + 1,
-              y - 1
+              y - 1,
             );
           }
         }

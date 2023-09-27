@@ -1,13 +1,3 @@
-/*
- * @Author: yorshka
- * @Date: 2021-01-19 16:24:29
- * @Last Modified by: yorshka
- * @Last Modified time: 2021-01-29 23:52:35
- *
- * EventBus 工具类
- *
- */
-
 interface Namespace {
   on: (...args: any) => void;
   remove: (...args: any) => void;

@@ -1,10 +1,3 @@
-/*
- * @Author: yorshka
- * @Date: 2021-01-29 22:35:02
- * @Last Modified by: yorshka
- * @Last Modified time: 2021-01-30 18:56:51
- */
-
 export interface MeshOptions {
   id: string;
   gridSize: number;

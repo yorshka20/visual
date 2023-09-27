@@ -1,10 +1,3 @@
-/*
- * @Author: yorshka
- * @Date: 2021-01-29 22:19:49
- *
- * world: hundreds of circle overlapping with each other. supporting mouse detecting and interacting.
- */
-
 import { World } from './world';
 
 // 1. create world

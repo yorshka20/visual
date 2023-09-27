@@ -1,25 +1,3 @@
-/*
- * @Author: yorshka
- * @Date: 2021-01-29 10:25:35
- *
- * canvas World.
- *
- * Duty of world:
- * - create world
- * - export control api
- *
- * what api do we need?
- * - start
- * - restart
- * - stop
- * - pause
- *
- * more advanced:
- * - tick
- * - nextTick
- *
- */
-
 import { VCanvas } from '../canvas';
 import { GRID_SIZE, SHOW_HIGHLIGHT, SHOW_MESH } from '../config';
 import { EventBus, EventTypes, Namespace } from '../eventBus';
@@ -58,7 +36,7 @@ export default class World {
     const { container: name } = options;
 
     const container = document.getElementById(
-      name || 'container'
+      name || 'container',
     ) as HTMLElement;
     // 保存容器
     this.container = container;
@@ -114,7 +92,7 @@ export default class World {
   public initListener(): void {
     EventBus.namespace(Namespace.INTERACTION).on(
       EventTypes.CLICK,
-      this.clickHandler
+      this.clickHandler,
     );
     // EventBus.namespace(Namespace.INTERACTION).on(
     //   EventTypes.MOVE,
@@ -174,7 +152,7 @@ export default class World {
     // targetShape最后render
     // 按zindex顺序绘制
     const shapeList = list.map(
-      (id) => this.meshLayer.shapeBucket.get(id) as Shape
+      (id) => this.meshLayer.shapeBucket.get(id) as Shape,
     );
     shapeList.sort((a, b) => b?.zIndex - a?.zIndex);
     // console.log('shapeList', shapeList);

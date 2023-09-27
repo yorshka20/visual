@@ -1,12 +1,3 @@
-/*
- * @Author: yorshka
- * @Date: 2021-01-30 17:18:10
- * @Last Modified by: yorshka
- * @Last Modified time: 2021-01-30 20:31:48
- *
- * 高亮层，绘制鼠标感知状态
- */
-
 import { VCanvas } from '../canvas';
 import type { VCanvasOptions } from '../canvas/interface';
 import { EventBus, EventTypes, Namespace } from '../eventBus';
@@ -54,7 +45,7 @@ export default class Highlight extends VCanvas {
   private init(): void {
     EventBus.namespace(Namespace.INTERACTION).on(
       EventTypes.HOVER,
-      this.hoverHandler
+      this.hoverHandler,
     );
   }
 
